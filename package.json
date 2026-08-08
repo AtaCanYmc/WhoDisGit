@@ -2,6 +2,7 @@
   "name": "whodisgit",
   "private": true,
   "version": "1.0.0",
+  "description": "GitHub unfollowers detector and profile analytics dashboard built with React, TypeScript, and Tailwind CSS",
   "type": "module",
   "scripts": {
     "dev": "vite",
