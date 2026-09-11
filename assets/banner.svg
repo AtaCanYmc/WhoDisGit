@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="100%" height="auto">
+  <defs>
+    <!-- Background Gradients -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070a12" />
+      <stop offset="50%" stop-color="#0c1322" />
+      <stop offset="100%" stop-color="#060913" />
+    </linearGradient>
+
+    <!-- Title Gradient -->
+    <linearGradient id="titleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="45%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#c084fc" />
+    </linearGradient>
+
+    <!-- Glow Gradients -->
+    <radialGradient id="cyanGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="purpleGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="pinkGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ec4899" stop-opacity="0.14" />
+      <stop offset="100%" stop-color="#ec4899" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Card Gradients -->
+    <linearGradient id="cardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#111827" stop-opacity="0.88" />
+      <stop offset="100%" stop-color="#0b0f19" stop-opacity="0.92" />
+    </linearGradient>
+
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.16" />
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.04" />
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.2" />
+    </linearGradient>
+
+    <!-- Dot Pattern -->
+    <pattern id="dotPattern" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.2" fill="#334155" fill-opacity="0.35" />
+    </pattern>
+  </defs>
+
+  <style>
+    .font-base { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    .badge-text { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; fill: #38bdf8; text-transform: uppercase; }
+    .title-text { font-size: 52px; font-weight: 800; letter-spacing: -1px; }
+    .tagline-text { font-size: 16px; font-weight: 400; fill: #94a3b8; }
+    .card-title { font-size: 15px; font-weight: 700; fill: #f8fafc; }
+    .card-desc { font-size: 12px; font-weight: 400; fill: #94a3b8; }
+    .stat-pill { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; }
+    .footer-pill { font-size: 11px; font-weight: 600; fill: #64748b; }
+  </style>
+
+  <!-- Container Frame -->
+  <rect width="1200" height="420" rx="16" fill="url(#bgGrad)" stroke="#1e293b" stroke-width="1.5" />
+
+  <!-- Background Dots -->
+  <rect width="1200" height="420" rx="16" fill="url(#dotPattern)" />
+
+  <!-- Ambient Color Glows -->
+  <circle cx="240" cy="110" r="260" fill="url(#cyanGlow)" />
+  <circle cx="960" cy="140" r="280" fill="url(#purpleGlow)" />
+  <circle cx="600" cy="360" r="220" fill="url(#pinkGlow)" />
+
+  <!-- Content Wrapper -->
+  <g class="font-base">
+    
+    <!-- Top Pill Badge -->
+    <g transform="translate(600, 48)">
+      <rect x="-145" y="-14" width="290" height="28" rx="14" fill="#0f172a" fill-opacity="0.85" stroke="#38bdf8" stroke-width="1" stroke-opacity="0.4" />
+      <circle cx="-123" cy="0" r="3.5" fill="#38bdf8" />
+      <text x="-110" y="4" class="badge-text">GITHUB NETWORK ANALYTICS</text>
+    </g>
+
+    <!-- Main Title & Logo -->
+    <g transform="translate(600, 112)">
+      <!-- GitHub Logo SVG Icon -->
+      <g transform="translate(-180, -32) scale(1.35)">
+        <path fill="#f8fafc" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+      </g>
+      <!-- Title text -->
+      <text x="-130" y="4" fill="url(#titleGrad)" class="title-text">WhoDisGit</text>
+      <!-- Magnifying Glass Icon -->
+      <g transform="translate(145, -28) scale(1.2)">
+        <circle cx="11" cy="11" r="7.5" fill="none" stroke="#c084fc" stroke-width="2.5" />
+        <line x1="16.5" y1="16.5" x2="23.5" y2="23.5" stroke="#c084fc" stroke-width="2.5" stroke-linecap="round" />
+      </g>
+    </g>
+
+    <!-- Tagline -->
+    <text x="600" y="165" text-anchor="middle" class="tagline-text">
+      Track unfollowers, explore mutual connections, and inspect repository stargazers with 100% client-side privacy.
+    </text>
+
+    <!-- 3 Core Feature Cards -->
+    <!-- Card 1: Unfollowers -->
+    <g transform="translate(85, 205)">
+      <rect width="310" height="110" rx="12" fill="url(#cardBg)" stroke="url(#borderGrad)" stroke-width="1.2" />
+      <rect x="0.6" y="0.6" width="308.8" height="3" rx="1.5" fill="#ef4444" />
+      
+      <!-- Icon Bubble -->
+      <circle cx="36" cy="42" r="18" fill="#ef4444" fill-opacity="0.12" />
+      <g transform="translate(24, 30)">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20zm6.31-3.1L7.1 5.69C8.45 4.63 10.15 4 12 4c4.42 0 8 3.58 8 8 0 1.85-.63 3.55-1.69 4.9z" fill="#ef4444"/>
+      </g>
+
+      <text x="66" y="40" class="card-title">Unfollowers</text>
+      <text x="66" y="58" class="card-desc">Users who do not follow back</text>
+      
+      <!-- Pill Badges -->
+      <rect x="20" y="74" width="95" height="20" rx="6" fill="#ef4444" fill-opacity="0.15" />
+      <text x="28" y="88" fill="#f87171" class="stat-pill">O(1) DETECTION</text>
+
+      <rect x="122" y="74" width="105" height="20" rx="6" fill="#1e293b" />
+      <text x="130" y="88" fill="#94a3b8" class="stat-pill">CSV / JSON EXPORT</text>
+    </g>
+
+    <!-- Card 2: Mutuals & Fans -->
+    <g transform="translate(445, 205)">
+      <rect width="310" height="110" rx="12" fill="url(#cardBg)" stroke="url(#borderGrad)" stroke-width="1.2" />
+      <rect x="0.6" y="0.6" width="308.8" height="3" rx="1.5" fill="#10b981" />
+      
+      <!-- Icon Bubble -->
+      <circle cx="36" cy="42" r="18" fill="#10b981" fill-opacity="0.12" />
+      <g transform="translate(24, 30)">
+        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 3s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="#10b981"/>
+      </g>
+
+      <text x="66" y="40" class="card-title">Mutuals &amp; Fans</text>
+      <text x="66" y="58" class="card-desc">Reciprocal network breakdown</text>
+      
+      <!-- Pill Badges -->
+      <rect x="20" y="74" width="105" height="20" rx="6" fill="#10b981" fill-opacity="0.15" />
+      <text x="28" y="88" fill="#34d399" class="stat-pill">MUTUAL RATIOS</text>
+
+      <rect x="132" y="74" width="95" height="20" rx="6" fill="#1e293b" />
+      <text x="140" y="88" fill="#94a3b8" class="stat-pill">PAGINATION 100+</text>
+    </g>
+
+    <!-- Card 3: Stargazers & Metrics -->
+    <g transform="translate(805, 205)">
+      <rect width="310" height="110" rx="12" fill="url(#cardBg)" stroke="url(#borderGrad)" stroke-width="1.2" />
+      <rect x="0.6" y="0.6" width="308.8" height="3" rx="1.5" fill="#f59e0b" />
+      
+      <!-- Icon Bubble -->
+      <circle cx="36" cy="42" r="18" fill="#f59e0b" fill-opacity="0.12" />
+      <g transform="translate(24, 30)">
+        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="#f59e0b"/>
+      </g>
+
+      <text x="66" y="40" class="card-title">Stars &amp; Profile Stats</text>
+      <text x="66" y="58" class="card-desc">Cross-repo stargazer tally &amp; bio</text>
+      
+      <!-- Pill Badges -->
+      <rect x="20" y="74" width="100" height="20" rx="6" fill="#f59e0b" fill-opacity="0.15" />
+      <text x="28" y="88" fill="#fbbf24" class="stat-pill">TOTAL STARS</text>
+
+      <rect x="127" y="74" width="100" height="20" rx="6" fill="#1e293b" />
+      <text x="135" y="88" fill="#94a3b8" class="stat-pill">RATE LIMIT BOOST</text>
+    </g>
+
+    <!-- Footer Specs Bar -->
+    <g transform="translate(600, 365)" text-anchor="middle">
+      <text class="footer-pill">
+        <tspan fill="#38bdf8">⚛ React 18</tspan>
+        <tspan fill="#475569">  •  </tspan>
+        <tspan fill="#818cf8">TypeScript 5.5</tspan>
+        <tspan fill="#475569">  •  </tspan>
+        <tspan fill="#38bdf8">Tailwind CSS v4</tspan>
+        <tspan fill="#475569">  •  </tspan>
+        <tspan fill="#a78bfa">Vite 5</tspan>
+        <tspan fill="#475569">  •  </tspan>
+        <tspan fill="#10b981">🔒 100% Client-Side Privacy</tspan>
+        <tspan fill="#475569">  •  </tspan>
+        <tspan fill="#94a3b8">🇬🇧 English &amp; 🇹🇷 Türkçe</tspan>
+      </text>
+    </g>
+
+  </g>
+</svg>
