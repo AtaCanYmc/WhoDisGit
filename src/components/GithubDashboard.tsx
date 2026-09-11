@@ -107,9 +107,24 @@ export default function GithubDashboard(): React.ReactElement {
   // --- Ayarlar Modalı Durumu ---
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
+  // --- Query Parametreleri (username, pat, raw) ---
+  const [isRawMode, setIsRawMode] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    const params = new URLSearchParams(window.location.search);
+    return params.get('raw') === '1' || params.get('raw') === 'true';
+  });
+
   // --- Form & Kimlik Doğrulama Durumları ---
-  const [username, setUsername] = useState<string>('');
-  const [pat, setPat] = useState<string>('');
+  const [username, setUsername] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    const params = new URLSearchParams(window.location.search);
+    return params.get('username') || params.get('user') || '';
+  });
+  const [pat, setPat] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    const params = new URLSearchParams(window.location.search);
+    return params.get('pat') || params.get('token') || '';
+  });
   const [rememberMe, setRememberMe] = useState<boolean>(false);
   const [showPat, setShowPat] = useState<boolean>(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -137,18 +152,30 @@ export default function GithubDashboard(): React.ReactElement {
   const [isNetworkOpen, setIsNetworkOpen] = useState<boolean>(true);
   const [isReposOpen, setIsReposOpen] = useState<boolean>(true);
 
-  // --- Sayfa Yüklendiğinde Kayıtlı Bilgileri Al ---
+  // --- Sayfa Yüklendiğinde Kayıtlı Bilgileri & URL Parametrelerini Al ---
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlUsername = params.get('username') || params.get('user') || '';
+    const urlPat = params.get('pat') || params.get('token') || '';
+    const urlRaw = params.get('raw') === '1' || params.get('raw') === 'true';
+
+    if (urlRaw) {
+      setIsRawMode(true);
+    }
+
     const savedUsername = localStorage.getItem('whodisgit_username');
     const savedPat = localStorage.getItem('whodisgit_pat');
     const savedRecent = localStorage.getItem('whodisgit_recent');
 
-    if (savedUsername) {
-      setUsername(savedUsername);
-      setRememberMe(true);
+    const effectiveUsername = urlUsername || savedUsername || '';
+    const effectivePat = urlPat || savedPat || '';
+
+    if (effectiveUsername) {
+      setUsername(effectiveUsername);
+      if (savedUsername && !urlUsername) setRememberMe(true);
     }
-    if (savedPat) {
-      setPat(savedPat);
+    if (effectivePat) {
+      setPat(effectivePat);
     }
     if (savedRecent) {
       try {
@@ -156,6 +183,11 @@ export default function GithubDashboard(): React.ReactElement {
       } catch (e) {
         console.error('Geçmiş aramalar yüklenemedi:', e);
       }
+    }
+
+    // URL üzerinden bir username verilmişse otomatik analizi başlat
+    if (urlUsername) {
+      void runAnalysis(urlUsername, effectivePat);
     }
   }, []);
 
@@ -256,11 +288,9 @@ export default function GithubDashboard(): React.ReactElement {
     }
   };
 
-  // --- Ana Analiz İşleme Fonksiyonu ---
-  const handleAnalyze = async (e?: React.FormEvent<HTMLFormElement>): Promise<void> => {
-    if (e) e.preventDefault();
-
-    const cleanUsername = username.trim();
+  // --- Analiz Çalıştırma Motoru (Query param veya Form) ---
+  const runAnalysis = async (targetUsername: string, targetPat: string): Promise<void> => {
+    const cleanUsername = targetUsername.trim();
     if (!cleanUsername) {
       setError({
         code: 400,
@@ -279,7 +309,7 @@ export default function GithubDashboard(): React.ReactElement {
     setTotalStars(0);
     setStatusMessage(t.fetchingProfile);
 
-    const headers = getHeaders(pat);
+    const headers = getHeaders(targetPat);
 
     try {
       const userRes = await fetch(`https://api.github.com/users/${cleanUsername}`, { headers });
@@ -329,7 +359,7 @@ export default function GithubDashboard(): React.ReactElement {
 
       if (rememberMe) {
         localStorage.setItem('whodisgit_username', cleanUsername);
-        if (pat) localStorage.setItem('whodisgit_pat', pat.trim());
+        if (targetPat) localStorage.setItem('whodisgit_pat', targetPat.trim());
       } else {
         localStorage.removeItem('whodisgit_username');
         localStorage.removeItem('whodisgit_pat');
@@ -348,6 +378,12 @@ export default function GithubDashboard(): React.ReactElement {
     } finally {
       setLoading(false);
     }
+  };
+
+  // --- Ana Analiz Form Submit Fonksiyonu ---
+  const handleAnalyze = async (e?: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    if (e) e.preventDefault();
+    await runAnalysis(username, pat);
   };
 
   const updateRecentSearches = (user: string): void => {
@@ -489,6 +525,88 @@ export default function GithubDashboard(): React.ReactElement {
       a.click();
     }
   };
+
+  // --- RAW JSON Modu (API Yanıtı Stili) ---
+  if (isRawMode) {
+    const rawData = error
+      ? {
+          status: 'error',
+          code: error.code,
+          title: error.title,
+          message: error.message
+        }
+      : loading
+      ? {
+          status: 'loading',
+          message: statusMessage || 'Fetching data from GitHub API...'
+        }
+      : profile
+      ? {
+          status: 'success',
+          user: profile,
+          metrics: {
+            totalStars,
+            totalForks,
+            topLanguage,
+            sourcesCount: repoBreakdown.sources,
+            forksCount: repoBreakdown.forked,
+            unfollowersCount: unfollowers.length,
+            fansCount: fans.length,
+            mutualsCount: mutuals.length,
+            followingCount: following.length,
+            followersCount: followers.length,
+            reposCount: repos.length
+          },
+          unfollowers,
+          fans,
+          mutuals,
+          following,
+          followers,
+          repos
+        }
+      : {
+          status: 'idle',
+          message: 'Provide ?username=<github_user>&raw=1 to query or remove raw=1 for dashboard'
+        };
+
+    return (
+      <div className="min-h-screen bg-[#0d1117] text-[#c9d1d9] p-4 font-mono text-xs selection:bg-cyan-900 selection:text-white">
+        <div className="max-w-5xl mx-auto mb-4 flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="font-semibold text-slate-200">WhoDisGit Raw JSON API Engine</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">application/json</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(JSON.stringify(rawData, null, 2));
+                setCopiedUser('raw_json');
+                setTimeout(() => setCopiedUser(null), 1500);
+              }}
+              className="px-2.5 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors cursor-pointer"
+            >
+              {copiedUser === 'raw_json' ? 'Copied JSON!' : 'Copy JSON'}
+            </button>
+            <button
+              onClick={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('raw');
+                window.history.pushState({}, '', url.toString());
+                setIsRawMode(false);
+              }}
+              className="px-2.5 py-1 text-xs rounded bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-800 transition-colors cursor-pointer"
+            >
+              Switch to Dashboard UI
+            </button>
+          </div>
+        </div>
+        <pre className="p-4 bg-[#161b22] border border-slate-800 rounded-lg overflow-x-auto whitespace-pre-wrap leading-relaxed shadow-inner">
+          {JSON.stringify(rawData, null, 2)}
+        </pre>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">

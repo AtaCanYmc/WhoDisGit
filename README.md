@@ -1,17 +1,17 @@
-<p align="center">
+<div align="center">
   <img src="./assets/banner.svg" alt="WhoDisGit - GitHub Unfollowers & Profile Analytics Dashboard" width="100%" />
-</p>
+</div>
 
 # WhoDisGit — GitHub Unfollowers & Profile Analytics Dashboard
 
-<p align="center">
+<div align="center">
   <img src="https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-5.5-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
   <img src="https://img.shields.io/badge/Vite-5.4-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
   <img src="https://img.shields.io/badge/GitHub_API-v3-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub API" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" />
-</p>
+</div>
 
 ---
 
@@ -35,6 +35,7 @@ Additionally, it aggregates high-level profile statistics, including total starg
 - **Stargazer Aggregation**: Queries public repositories to compute total star counts.
 - **Optional Personal Access Token (PAT)**: Authenticate with a personal token to increase API limits from 60 to 5,000 requests per hour.
 - **Client-Side Privacy**: Runs 100% in the browser. Personal access tokens are stored only in `localStorage` and never transmitted to third-party servers.
+- **Deep Linking & Raw API Mode**: Pass `?username=<user>&pat=<token>` in the URL for instant automated analysis; append `&raw=1` to receive pure backend API-style JSON data directly on screen with a one-click copy button.
 - **Public Repository Explorer**: Browse public repositories with real-time keyword filtering, fork tags, language indicators, star & fork counters, and sorting by stars, update date, or name.
 - **Multilingual Interface**: Integrated support for 5 languages: English, Türkçe, Español, Deutsch, and Français.
 - **Theme Support**: Dark mode and light mode based on user preference.
