@@ -19,6 +19,7 @@ export interface GithubUser {
   public_repos: number;
   public_gists?: number;
   created_at?: string;
+  hireable?: boolean | null;
 }
 
 export interface GithubSimpleUser {
@@ -31,9 +32,17 @@ export interface GithubSimpleUser {
 export interface GithubRepo {
   id: number;
   name: string;
-  stargazers_count: number;
+  full_name?: string;
+  description?: string | null;
   html_url: string;
+  stargazers_count: number;
+  forks_count?: number;
+  language?: string | null;
+  fork?: boolean;
+  updated_at?: string;
 }
+
+export type RepoSortOption = 'stars' | 'forks' | 'updated' | 'name';
 
 export interface ApiError {
   code: number;

@@ -23,7 +23,8 @@ import {
   Filter,
   Trash2,
   Info,
-  Settings
+  Settings,
+  ChevronDown
 } from 'lucide-react';
 
 import type {
@@ -40,6 +41,7 @@ import type {
 
 import { translations } from '../i18n/translations';
 import SettingsModal from './SettingsModal';
+import RepositorySection from './RepositorySection';
 
 /**
  * WhoDisGit - GitHub Unfollowers & Profile Analytics Dashboard (TypeScript TSX)
@@ -97,6 +99,7 @@ export default function GithubDashboard(): React.ReactElement {
   // API Sonuçları
   const [profile, setProfile] = useState<GithubUser | null>(null);
   const [totalStars, setTotalStars] = useState<number>(0);
+  const [repos, setRepos] = useState<GithubRepo[]>([]);
   const [followers, setFollowers] = useState<GithubSimpleUser[]>([]);
   const [following, setFollowing] = useState<GithubSimpleUser[]>([]);
 
@@ -105,6 +108,11 @@ export default function GithubDashboard(): React.ReactElement {
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [copiedUser, setCopiedUser] = useState<string | null>(null);
+
+  // Akordiyon Bölüm Durumları
+  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(true);
+  const [isNetworkOpen, setIsNetworkOpen] = useState<boolean>(true);
+  const [isReposOpen, setIsReposOpen] = useState<boolean>(true);
 
   // --- Sayfa Yüklendiğinde Kayıtlı Bilgileri Al ---
   useEffect(() => {
@@ -198,31 +206,33 @@ export default function GithubDashboard(): React.ReactElement {
     return allData;
   };
 
-  // --- Toplam Yıldız Sayısını Hesaplama ---
-  const fetchTotalStars = async (
+  // --- Toplam Yıldız Sayısını ve Repoları Çekme ---
+  const fetchReposAndStars = async (
     userLogin: string,
     totalPublicRepos: number,
     headers: Record<string, string>
-  ): Promise<number> => {
+  ): Promise<{ totalStars: number; repos: GithubRepo[] }> => {
     try {
       setStatusMessage(t.calculatingStars);
       const perPage = 100;
       const totalPages = Math.min(Math.ceil(totalPublicRepos / perPage) || 1, 5);
       let starsSum = 0;
+      const allRepos: GithubRepo[] = [];
 
       for (let page = 1; page <= totalPages; page++) {
-        const res = await fetch(`https://api.github.com/users/${userLogin}/repos?per_page=${perPage}&page=${page}&type=owner`, { headers });
+        const res = await fetch(`https://api.github.com/users/${userLogin}/repos?per_page=${perPage}&page=${page}&sort=updated&type=owner`, { headers });
         if (!res.ok) break;
-        const repos: GithubRepo[] = await res.json();
-        if (!Array.isArray(repos) || repos.length === 0) break;
+        const pageRepos: GithubRepo[] = await res.json();
+        if (!Array.isArray(pageRepos) || pageRepos.length === 0) break;
 
-        starsSum += repos.reduce((acc, repo) => acc + (repo.stargazers_count || 0), 0);
-        if (repos.length < perPage) break;
+        allRepos.push(...pageRepos);
+        starsSum += pageRepos.reduce((acc, repo) => acc + (repo.stargazers_count || 0), 0);
+        if (pageRepos.length < perPage) break;
       }
-      return starsSum;
+      return { totalStars: starsSum, repos: allRepos };
     } catch (e) {
-      console.warn('Yıldız sayısı hesaplanırken hata oluştu:', e);
-      return 0;
+      console.warn('Yıldız sayısı ve repolar hesaplanırken hata oluştu:', e);
+      return { totalStars: 0, repos: [] };
     }
   };
 
@@ -245,6 +255,7 @@ export default function GithubDashboard(): React.ReactElement {
     setProfile(null);
     setFollowers([]);
     setFollowing([]);
+    setRepos([]);
     setTotalStars(0);
     setStatusMessage(t.fetchingProfile);
 
@@ -287,15 +298,16 @@ export default function GithubDashboard(): React.ReactElement {
       const userData: GithubUser = await userRes.json();
       setProfile(userData);
 
-      const [fetchedFollowers, fetchedFollowing, calculatedStars] = await Promise.all([
+      const [fetchedFollowers, fetchedFollowing, repoData] = await Promise.all([
         fetchAllPages(`https://api.github.com/users/${cleanUsername}/followers`, userData.followers, 'followers', headers),
         fetchAllPages(`https://api.github.com/users/${cleanUsername}/following`, userData.following, 'following', headers),
-        fetchTotalStars(userData.login, userData.public_repos, headers)
+        fetchReposAndStars(userData.login, userData.public_repos, headers)
       ]);
 
       setFollowers(fetchedFollowers);
       setFollowing(fetchedFollowing);
-      setTotalStars(calculatedStars);
+      setTotalStars(repoData.totalStars);
+      setRepos(repoData.repos);
 
       if (rememberMe) {
         localStorage.setItem('whodisgit_username', cleanUsername);
@@ -641,134 +653,267 @@ export default function GithubDashboard(): React.ReactElement {
         <main className="space-y-6">
           
           {/* 1. PROFİL KARTI VE METRİKLER */}
-          <section className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6 shadow-sm space-y-6">
+          <section id="profile-section" className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6 shadow-sm space-y-5">
             
-            {/* Üst Bilgiler: Avatar & Kullanıcı Künyesi */}
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
-              <img
-                src={profile.avatar_url}
-                alt={profile.name || profile.login}
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-slate-200 dark:border-slate-800 object-cover shrink-0"
-              />
-
-              <div className="space-y-1 flex-1">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            {/* Section Accordion Header */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setIsProfileOpen((prev) => !prev)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setIsProfileOpen((prev) => !prev);
+                }
+              }}
+              aria-expanded={isProfileOpen}
+              className="flex items-center justify-between gap-3 cursor-pointer select-none group"
+              title={isProfileOpen ? t.collapseSection : t.expandSection}
+            >
+              <div className="flex items-center gap-3">
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.name || profile.login}
+                  className="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-800 object-cover shrink-0"
+                />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
                       {profile.name || profile.login}
                     </h2>
-                    <a
-                      href={profile.html_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-mono inline-flex items-center gap-1 text-xs mt-0.5"
-                    >
-                      @{profile.login} <ExternalLink className="w-3 h-3" />
-                    </a>
+                    <span className="text-xs font-mono text-slate-500">
+                      @{profile.login}
+                    </span>
+                    {profile.hireable && (
+                      <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400">
+                        Hireable
+                      </span>
+                    )}
                   </div>
-
-                  <a
-                    href={profile.html_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 inline-flex items-center justify-center gap-1.5 transition-all self-center sm:self-auto"
-                  >
-                    <Github className="w-3.5 h-3.5" /> {t.openGithubProfile}
-                  </a>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {t.profileSectionSubtitle}
+                  </p>
                 </div>
+              </div>
 
+              <div className="flex items-center gap-2">
+                <a
+                  href={profile.html_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 transition-colors"
+                >
+                  <Github className="w-3.5 h-3.5" />
+                  <span>{t.openGithubProfile}</span>
+                  <ExternalLink className="w-3 h-3 text-slate-400" />
+                </a>
+
+                <div className="p-1.5 rounded-lg text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                  <ChevronDown
+                    className={`w-5 h-5 transition-transform duration-200 ${
+                      isProfileOpen ? 'rotate-180 text-slate-900 dark:text-slate-100' : ''
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Collapsible Body */}
+            {isProfileOpen && (
+              <div className="space-y-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+                {/* Bio */}
                 {profile.bio && (
-                  <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm leading-relaxed max-w-2xl pt-0.5">
+                  <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm leading-relaxed max-w-2xl">
                     {profile.bio}
                   </p>
                 )}
-              </div>
-            </div>
 
-            {/* 6 Hızlı Metrik Kartı Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-5 border-t border-slate-100 dark:border-slate-800">
-              
-              {/* 1. Geri Takip Etmeyenler */}
-              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3.5 flex flex-col justify-between">
-                <div className="flex items-center justify-between text-rose-600 dark:text-rose-400 mb-1.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricUnfollowers}</span>
-                  <UserX className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="font-mono text-2xl font-bold text-rose-600 dark:text-rose-400">{unfollowers.length}</span>
-                  <p className="text-[10px] text-slate-500 mt-0.5 truncate">{t.metricUnfollowersDesc}</p>
+                {/* 6 Hızlı Metrik Kartı Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                  
+                  {/* 1. Geri Takip Etmeyenler */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('unfollowers');
+                      setIsNetworkOpen(true);
+                      document.getElementById('network-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/70 dark:hover:bg-slate-900/90 rounded-lg p-3.5 flex flex-col justify-between text-left transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between text-rose-600 dark:text-rose-400 mb-1.5">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricUnfollowers}</span>
+                      <UserX className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-mono text-2xl font-bold text-rose-600 dark:text-rose-400">{unfollowers.length}</span>
+                      <p className="text-[10px] text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-400 mt-0.5 truncate transition-colors">{t.metricUnfollowersDesc}</p>
+                    </div>
+                  </button>
+
+                  {/* 2. Toplam Yıldız Sayısı */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsReposOpen(true);
+                      document.getElementById('repositories-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/70 dark:hover:bg-slate-900/90 rounded-lg p-3.5 flex flex-col justify-between text-left transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between text-amber-500 dark:text-amber-400 mb-1.5">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricTotalStars}</span>
+                      <Star className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">{totalStars}</span>
+                      <p className="text-[10px] text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-400 mt-0.5 truncate transition-colors">{t.metricTotalStarsDesc}</p>
+                    </div>
+                  </button>
+
+                  {/* 3. Takipçi Sayısı */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('fans');
+                      setIsNetworkOpen(true);
+                      document.getElementById('network-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/70 dark:hover:bg-slate-900/90 rounded-lg p-3.5 flex flex-col justify-between text-left transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 mb-1.5 transition-colors">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricFollowers}</span>
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">{profile.followers}</span>
+                      <p className="text-[10px] text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-400 mt-0.5 truncate transition-colors">{t.metricFollowersDesc}</p>
+                    </div>
+                  </button>
+
+                  {/* 4. Takip Edilen Sayısı */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('following');
+                      setIsNetworkOpen(true);
+                      document.getElementById('network-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/70 dark:hover:bg-slate-900/90 rounded-lg p-3.5 flex flex-col justify-between text-left transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 mb-1.5 transition-colors">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricFollowing}</span>
+                      <UserCheck className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">{profile.following}</span>
+                      <p className="text-[10px] text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-400 mt-0.5 truncate transition-colors">{t.metricFollowingDesc}</p>
+                    </div>
+                  </button>
+
+                  {/* 5. Karşılıklı Takip */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('mutuals');
+                      setIsNetworkOpen(true);
+                      document.getElementById('network-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/70 dark:hover:bg-slate-900/90 rounded-lg p-3.5 flex flex-col justify-between text-left transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 mb-1.5">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricMutuals}</span>
+                      <HeartHandshake className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">{mutuals.length}</span>
+                      <p className="text-[10px] text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-400 mt-0.5 truncate transition-colors">{t.metricMutualsDesc}</p>
+                    </div>
+                  </button>
+
+                  {/* 6. Repolar */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsReposOpen(true);
+                      document.getElementById('repositories-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/70 dark:hover:bg-slate-900/90 rounded-lg p-3.5 flex flex-col justify-between text-left transition-colors group cursor-pointer"
+                    title={t.metricReposDesc}
+                  >
+                    <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 mb-1.5 transition-colors">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricRepos}</span>
+                      <BookOpen className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">{profile.public_repos}</span>
+                      <p className="text-[10px] text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-400 mt-0.5 truncate transition-colors">{t.metricReposDesc}</p>
+                    </div>
+                  </button>
+
                 </div>
               </div>
-
-              {/* 2. Toplam Yıldız Sayısı */}
-              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3.5 flex flex-col justify-between">
-                <div className="flex items-center justify-between text-amber-500 dark:text-amber-400 mb-1.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricTotalStars}</span>
-                  <Star className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">{totalStars}</span>
-                  <p className="text-[10px] text-slate-500 mt-0.5 truncate">{t.metricTotalStarsDesc}</p>
-                </div>
-              </div>
-
-              {/* 3. Takipçi Sayısı */}
-              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3.5 flex flex-col justify-between">
-                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 mb-1.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricFollowers}</span>
-                  <Users className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">{profile.followers}</span>
-                  <p className="text-[10px] text-slate-500 mt-0.5 truncate">{t.metricFollowersDesc}</p>
-                </div>
-              </div>
-
-              {/* 4. Takip Edilen Sayısı */}
-              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3.5 flex flex-col justify-between">
-                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 mb-1.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricFollowing}</span>
-                  <UserCheck className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">{profile.following}</span>
-                  <p className="text-[10px] text-slate-500 mt-0.5 truncate">{t.metricFollowingDesc}</p>
-                </div>
-              </div>
-
-              {/* 5. Karşılıklı Takip */}
-              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3.5 flex flex-col justify-between">
-                <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 mb-1.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricMutuals}</span>
-                  <HeartHandshake className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">{mutuals.length}</span>
-                  <p className="text-[10px] text-slate-500 mt-0.5 truncate">{t.metricMutualsDesc}</p>
-                </div>
-              </div>
-
-              {/* 6. Repolar */}
-              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3.5 flex flex-col justify-between">
-                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 mb-1.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricRepos}</span>
-                  <BookOpen className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">{profile.public_repos}</span>
-                  <p className="text-[10px] text-slate-500 mt-0.5 truncate">{t.metricReposDesc}</p>
-                </div>
-              </div>
-
-            </div>
+            )}
           </section>
 
           {/* 2. ETKİLEŞİMLİ LİSTE VE SEKMELER (TABS & LIST) */}
-          <section className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6 shadow-sm space-y-5">
+          <section id="network-section" className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6 shadow-sm space-y-5">
             
-            {/* Sekme Butonları (Tabs) */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-slate-100 dark:border-slate-800">
-              <button
+            {/* Section Accordion Header */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setIsNetworkOpen((prev) => !prev)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setIsNetworkOpen((prev) => !prev);
+                }
+              }}
+              aria-expanded={isNetworkOpen}
+              className="flex items-center justify-between gap-3 cursor-pointer select-none group"
+              title={isNetworkOpen ? t.collapseSection : t.expandSection}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 transition-colors">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                      {t.networkSectionTitle}
+                    </h3>
+                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                      {activeTab === 'unfollowers'
+                        ? unfollowers.length
+                        : activeTab === 'fans'
+                        ? fans.length
+                        : activeTab === 'mutuals'
+                        ? mutuals.length
+                        : following.length}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {t.networkSectionSubtitle}
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-1.5 rounded-lg text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <ChevronDown
+                  className={`w-5 h-5 transition-transform duration-200 ${
+                    isNetworkOpen ? 'rotate-180 text-slate-900 dark:text-slate-100' : ''
+                  }`}
+                />
+              </div>
+            </div>
+
+            {/* Collapsible Body */}
+            {isNetworkOpen && (
+              <div className="space-y-5 pt-3 border-t border-slate-100 dark:border-slate-800">
+                {/* Sekme Butonları (Tabs) */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-slate-100 dark:border-slate-800">
+                  <button
                 onClick={() => setActiveTab('unfollowers')}
                 className={`px-3.5 py-2 rounded-lg font-medium text-xs transition-colors shrink-0 flex items-center gap-2 cursor-pointer ${
                   activeTab === 'unfollowers'
@@ -958,10 +1103,22 @@ export default function GithubDashboard(): React.ReactElement {
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
+                </div>
+              )}
+
+            </div>
+          )}
 
           </section>
+
+          {/* 3. REPOSITORIES SECTION */}
+          <RepositorySection
+            repos={repos}
+            lang={lang}
+            isOpen={isReposOpen}
+            onToggle={() => setIsReposOpen((prev) => !prev)}
+            username={profile.login}
+          />
 
         </main>
       )}

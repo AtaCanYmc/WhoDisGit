@@ -80,6 +80,27 @@ export interface TranslationSchema {
   // Footer
   footerRights: string;
   footerPrivacy: string;
+
+  // Accordion Sections
+  profileSectionTitle: string;
+  profileSectionSubtitle: string;
+  networkSectionTitle: string;
+  networkSectionSubtitle: string;
+  expandSection: string;
+  collapseSection: string;
+
+  // Repositories Section
+  reposSectionTitle: string;
+  reposSectionSubtitle: string;
+  repoSearchPlaceholder: string;
+  sortByStars: string;
+  sortByForks: string;
+  sortByUpdated: string;
+  sortByName: string;
+  noReposTitle: string;
+  noReposMsg: string;
+  forkBadge: string;
+  repoCountLabel: (count: number) => string;
 }
 
 export const translations: Record<Language, TranslationSchema> = {
@@ -157,7 +178,26 @@ export const translations: Record<Language, TranslationSchema> = {
     noUsersMsgTab: 'Bu sekmede görüntülenecek herhangi bir kullanıcı bulunmuyor.',
 
     footerRights: 'Tüm hakları saklıdır. GitHub REST API v3 kullanılarak oluşturulmuştur.',
-    footerPrivacy: 'Personal Access Token (PAT) bilgisi sadece istemci tarafında (tarayıcınızda) işlenir, hiçbir sunucuya gönderilmez.'
+    footerPrivacy: 'Personal Access Token (PAT) bilgisi sadece istemci tarafında (tarayıcınızda) işlenir, hiçbir sunucuya gönderilmez.',
+
+    profileSectionTitle: 'Profil & İstatistikler',
+    profileSectionSubtitle: 'Kullanıcı künyesi ve temel hesap metrikleri',
+    networkSectionTitle: 'Bağlantı & Takipçi Analizi',
+    networkSectionSubtitle: 'Karşılıksız takipleri, hayranları ve ortak bağlantıları filtreleyin',
+    expandSection: 'Bölümü Genişlet',
+    collapseSection: 'Bölümü Daralt',
+
+    reposSectionTitle: 'Depolar & Kamusal Projeler',
+    reposSectionSubtitle: 'Kullanıcının geliştirdiği kamusal depolar, yıldız sayıları ve diller',
+    repoSearchPlaceholder: 'Repo adı veya açıklama ara...',
+    sortByStars: 'En Çok Yıldız',
+    sortByForks: 'En Çok Fork',
+    sortByUpdated: 'Son Güncellenen',
+    sortByName: 'İsim (A-Z)',
+    noReposTitle: 'Depo Bulunamadı',
+    noReposMsg: 'Arama kriterlerinize uygun herhangi bir depo bulunamadı.',
+    forkBadge: 'Fork',
+    repoCountLabel: (count) => `${count} Depo`
   },
   en: {
     heroBadge: 'GitHub Unfollowers & Profile Analytics',
@@ -233,7 +273,26 @@ export const translations: Record<Language, TranslationSchema> = {
     noUsersMsgTab: 'There are no users to display in this tab.',
 
     footerRights: 'All rights reserved. Built using GitHub REST API v3.',
-    footerPrivacy: 'Personal Access Token (PAT) information is strictly processed client-side (in your browser) and never sent to any server.'
+    footerPrivacy: 'Personal Access Token (PAT) information is strictly processed client-side (in your browser) and never sent to any server.',
+
+    profileSectionTitle: 'Profile & Metrics',
+    profileSectionSubtitle: 'Account overview and core profile metrics',
+    networkSectionTitle: 'Network & Follower Analytics',
+    networkSectionSubtitle: 'Inspect non-reciprocal follows, fans, and mutual connections',
+    expandSection: 'Expand section',
+    collapseSection: 'Collapse section',
+
+    reposSectionTitle: 'Repositories & Public Projects',
+    reposSectionSubtitle: 'Public repositories, star counts, and primary languages',
+    repoSearchPlaceholder: 'Search repository name or description...',
+    sortByStars: 'Most Stars',
+    sortByForks: 'Most Forks',
+    sortByUpdated: 'Recently Updated',
+    sortByName: 'Name (A-Z)',
+    noReposTitle: 'No Repositories Found',
+    noReposMsg: 'No repositories matched your search query.',
+    forkBadge: 'Fork',
+    repoCountLabel: (count) => `${count} Repositories`
   },
   es: {
     heroBadge: 'No Seguidores y Analizador de Perfil de GitHub',
@@ -309,7 +368,26 @@ export const translations: Record<Language, TranslationSchema> = {
     noUsersMsgTab: 'No hay usuarios para mostrar en esta pestaña.',
 
     footerRights: 'Todos los derechos reservados. Desarrollado con GitHub REST API v3.',
-    footerPrivacy: 'Los Tokens de Acceso Personal (PAT) se procesan estrictamente en el navegador del usuario y nunca se envían a ningún servidor.'
+    footerPrivacy: 'Los Tokens de Acceso Personal (PAT) se procesan estrictamente en el navegador del usuario y nunca se envían a ningún servidor.',
+
+    profileSectionTitle: 'Perfil y Métricas',
+    profileSectionSubtitle: 'Resumen de la cuenta y métricas clave',
+    networkSectionTitle: 'Análisis de Red y Seguidores',
+    networkSectionSubtitle: 'Inspecciona no seguidores, fans y conexiones mutuas',
+    expandSection: 'Expandir sección',
+    collapseSection: 'Contraer sección',
+
+    reposSectionTitle: 'Repositorios y Proyectos Públicos',
+    reposSectionSubtitle: 'Repositorios públicos, recuento de estrellas y lenguajes',
+    repoSearchPlaceholder: 'Buscar por nombre o descripción...',
+    sortByStars: 'Más estrellas',
+    sortByForks: 'Más bifurcaciones',
+    sortByUpdated: 'Recientemente actualizado',
+    sortByName: 'Nombre (A-Z)',
+    noReposTitle: 'No se encontraron repositorios',
+    noReposMsg: 'Ningún repositorio coincide con tu búsqueda.',
+    forkBadge: 'Bifurcación',
+    repoCountLabel: (count) => `${count} Repositorios`
   },
   de: {
     heroBadge: 'GitHub Entfolger & Profil-Analytics',
@@ -385,7 +463,26 @@ export const translations: Record<Language, TranslationSchema> = {
     noUsersMsgTab: 'In diesem Tab sind keine Benutzer vorhanden.',
 
     footerRights: 'Alle Rechte vorbehalten. Erstellt mit der GitHub REST API v3.',
-    footerPrivacy: 'Personal Access Token (PAT) werden ausschließlich im Browser verarbeitet und niemals an einen Server gesendet.'
+    footerPrivacy: 'Personal Access Token (PAT) werden ausschließlich im Browser verarbeitet und niemals an einen Server gesendet.',
+
+    profileSectionTitle: 'Profil & Metriken',
+    profileSectionSubtitle: 'Kontoübersicht und Profilmetriken',
+    networkSectionTitle: 'Netzwerk- & Follower-Analyse',
+    networkSectionSubtitle: 'Nicht-Follower, Fans und gegenseitige Kontakte prüfen',
+    expandSection: 'Bereich erweitern',
+    collapseSection: 'Bereich einklappen',
+
+    reposSectionTitle: 'Repositories & Öffentliche Projekte',
+    reposSectionSubtitle: 'Öffentliche Repositories, Sterne und primäre Sprachen',
+    repoSearchPlaceholder: 'Repository nach Name oder Beschreibung suchen...',
+    sortByStars: 'Meiste Sterne',
+    sortByForks: 'Meiste Forks',
+    sortByUpdated: 'Zuletzt aktualisiert',
+    sortByName: 'Name (A-Z)',
+    noReposTitle: 'Keine Repositories gefunden',
+    noReposMsg: 'Keine Repositories entsprechen deiner Suchanfrage.',
+    forkBadge: 'Fork',
+    repoCountLabel: (count) => `${count} Repositories`
   },
   fr: {
     heroBadge: 'Désabonnements & Analyse de Profil GitHub',
@@ -461,6 +558,25 @@ export const translations: Record<Language, TranslationSchema> = {
     noUsersMsgTab: 'Aucun utilisateur à afficher dans cet onglet.',
 
     footerRights: 'Tous droits réservés. Conçu avec l\'API REST GitHub v3.',
-    footerPrivacy: 'Les jetons d\'accès personnels (PAT) sont traités exclusivement dans votre navigateur et ne sont jamais transmis à aucun serveur.'
+    footerPrivacy: 'Les jetons d\'accès personnels (PAT) sont traités exclusivement dans votre navigateur et ne sont jamais transmis à aucun serveur.',
+
+    profileSectionTitle: 'Profil & Métriques',
+    profileSectionSubtitle: 'Aperçu du compte et métriques principales',
+    networkSectionTitle: 'Analyse du Réseau & Abonnés',
+    networkSectionSubtitle: 'Analysez les désabonnements, fans et abonnements mutuels',
+    expandSection: 'Développer la section',
+    collapseSection: 'Réduire la section',
+
+    reposSectionTitle: 'Dépôts & Projets Publics',
+    reposSectionSubtitle: 'Dépôts publics, nombre d\'étoiles et langages',
+    repoSearchPlaceholder: 'Rechercher par nom ou description...',
+    sortByStars: 'Plus d\'étoiles',
+    sortByForks: 'Plus de forks',
+    sortByUpdated: 'Récemment mis à jour',
+    sortByName: 'Nom (A-Z)',
+    noReposTitle: 'Aucun dépôt trouvé',
+    noReposMsg: 'Aucun dépôt ne correspond à votre recherche.',
+    forkBadge: 'Fork',
+    repoCountLabel: (count) => `${count} Dépôts`
   }
 };
