@@ -27,7 +27,8 @@ Feature requests are welcome! Please open an issue using the [Feature Request Te
 3. Make your changes and write clean code following TypeScript & React best practices.
 4. Verify local build and type checking:
    ```bash
-   npm run build
+   make ci
+   # or: npm run type-check && npm run build
    ```
 5. Commit your changes with a clear commit message.
 6. Push to your branch and open a Pull Request against `main`.
@@ -37,6 +38,6 @@ Feature requests are welcome! Please open an issue using the [Feature Request Te
 ## 🎨 Code Style Guidelines
 
 - **TypeScript**: Always define strict types or interfaces for new data structures in `src/types/github.ts`.
-- **Localization (i18n)**: When adding user-facing text, update both `tr` and `en` keys in `src/i18n/translations.ts`.
+- **Localization (i18n)**: When adding user-facing text, update all 5 language keys (`tr`, `en`, `es`, `de`, `fr`) in `src/i18n/translations.ts`.
 - **Styling**: Use Tailwind CSS utility classes and ensure both **Dark** (`dark:`) and **Light** mode variants look great.
 - **Formatting**: Keep code clean, readable, and properly formatted.
