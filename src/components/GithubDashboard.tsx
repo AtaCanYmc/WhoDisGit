@@ -18,14 +18,37 @@ import {
   Check,
   Eye,
   EyeOff,
-  Github,
   ArrowUpDown,
   Filter,
   Trash2,
   Info,
   Settings,
-  ChevronDown
+  ChevronDown,
+  Activity,
+  GitFork,
+  MapPin,
+  Building2,
+  Link2,
+  Calendar,
+  Code2,
+  FolderGit2
 } from 'lucide-react';
+
+const GithubIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+    <path d="M9 18c-4.51 2-5-2-7-2" />
+  </svg>
+);
 
 import type {
   GithubUser,
@@ -174,26 +197,23 @@ export default function GithubDashboard(): React.ReactElement {
         if (res.status === 403) {
           const rateLimitReset = res.headers.get('X-RateLimit-Reset');
           const resetTime = rateLimitReset ? new Date(parseInt(rateLimitReset, 10) * 1000).toLocaleTimeString() : undefined;
-          const apiErr: ApiError = {
+          throw {
             code: 403,
             title: t.errRateLimitTitle,
             message: t.errRateLimitMsg(resetTime)
-          };
-          throw apiErr;
+          } as ApiError;
         } else if (res.status === 401) {
-          const apiErr: ApiError = {
+          throw {
             code: 401,
             title: t.errUnauthorizedTitle,
             message: t.errUnauthorizedMsg
-          };
-          throw apiErr;
+          } as ApiError;
         }
-        const apiErr: ApiError = {
+        throw {
           code: res.status,
           title: t.errGenericTitle,
           message: t.errGenericMsg(res.status)
-        };
-        throw apiErr;
+        } as ApiError;
       }
 
       const data: GithubSimpleUser[] = await res.json();
@@ -266,33 +286,31 @@ export default function GithubDashboard(): React.ReactElement {
       
       if (!userRes.ok) {
         if (userRes.status === 404) {
-          const apiErr: ApiError = {
+          setError({
             code: 404,
             title: t.errUserNotFoundTitle,
             message: t.errUserNotFoundMsg(cleanUsername)
-          };
-          throw apiErr;
+          });
         } else if (userRes.status === 403) {
-          const apiErr: ApiError = {
+          setError({
             code: 403,
             title: t.errRateLimitTitle,
             message: t.errRateLimitMsg()
-          };
-          throw apiErr;
+          });
         } else if (userRes.status === 401) {
-          const apiErr: ApiError = {
+          setError({
             code: 401,
             title: t.errUnauthorizedTitle,
             message: t.errUnauthorizedMsg
-          };
-          throw apiErr;
+          });
+        } else {
+          setError({
+            code: userRes.status,
+            title: t.errGenericTitle,
+            message: t.errGenericMsg(userRes.status)
+          });
         }
-        const apiErr: ApiError = {
-          code: userRes.status,
-          title: t.errGenericTitle,
-          message: t.errGenericMsg(userRes.status)
-        };
-        throw apiErr;
+        return;
       }
 
       const userData: GithubUser = await userRes.json();
@@ -378,6 +396,48 @@ export default function GithubDashboard(): React.ReactElement {
     return following.filter((user) => followersMap.has(user.login.toLowerCase()));
   }, [following, followersMap]);
 
+  // Ekstra Profil ve Repo Metrikleri
+  const totalForks = useMemo<number>(() => {
+    return repos.reduce((acc, r) => acc + (r.forks_count || 0), 0);
+  }, [repos]);
+
+  const topLanguage = useMemo<{ language: string; count: number } | null>(() => {
+    if (repos.length === 0) return null;
+    const counts: Record<string, number> = {};
+    repos.forEach((r) => {
+      if (r.language) {
+        counts[r.language] = (counts[r.language] || 0) + 1;
+      }
+    });
+    let maxLang: string | null = null;
+    let maxCount = 0;
+    Object.entries(counts).forEach(([language, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        maxLang = language;
+      }
+    });
+    return maxLang ? { language: maxLang, count: maxCount } : null;
+  }, [repos]);
+
+  const repoBreakdown = useMemo(() => {
+    const sources = repos.filter((r) => !r.fork).length;
+    const forked = repos.filter((r) => r.fork).length;
+    return { sources, forked };
+  }, [repos]);
+
+  const memberSinceFormatted = useMemo<string>(() => {
+    if (!profile?.created_at) return '';
+    try {
+      const date = new Date(profile.created_at);
+      const formatted = new Intl.DateTimeFormat(lang, { month: 'short', year: 'numeric' }).format(date);
+      const diffYears = Math.max(0, new Date().getFullYear() - date.getFullYear());
+      return diffYears > 0 ? `${formatted} (${diffYears}y)` : formatted;
+    } catch {
+      return '';
+    }
+  }, [profile?.created_at, lang]);
+
   // --- Filtrelenmiş ve Sıralanmış Liste ---
   const currentList = useMemo<GithubSimpleUser[]>(() => {
     let list: GithubSimpleUser[] = [];
@@ -438,7 +498,7 @@ export default function GithubDashboard(): React.ReactElement {
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-950">
-              <Github className="w-5 h-5" />
+              <GithubIcon className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -482,7 +542,7 @@ export default function GithubDashboard(): React.ReactElement {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Github className="w-4 h-4" />
+                  <GithubIcon className="w-4 h-4" />
                 </div>
                 <input
                   id="github-username"
@@ -704,7 +764,7 @@ export default function GithubDashboard(): React.ReactElement {
                   onClick={(e) => e.stopPropagation()}
                   className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 transition-colors"
                 >
-                  <Github className="w-3.5 h-3.5" />
+                  <GithubIcon className="w-3.5 h-3.5" />
                   <span>{t.openGithubProfile}</span>
                   <ExternalLink className="w-3 h-3 text-slate-400" />
                 </a>
@@ -727,6 +787,44 @@ export default function GithubDashboard(): React.ReactElement {
                   <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm leading-relaxed max-w-2xl">
                     {profile.bio}
                   </p>
+                )}
+
+                {/* Meta Etiketleri (Konum, Şirket, Blog, Üyelik Tarihi) */}
+                {(profile.location || profile.company || profile.blog || memberSinceFormatted) && (
+                  <div className="flex items-center gap-x-4 gap-y-2 flex-wrap text-xs text-slate-500 dark:text-slate-400">
+                    {profile.location && (
+                      <span className="inline-flex items-center gap-1.5 truncate">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{profile.location}</span>
+                      </span>
+                    )}
+
+                    {profile.company && (
+                      <span className="inline-flex items-center gap-1.5 truncate">
+                        <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{profile.company}</span>
+                      </span>
+                    )}
+
+                    {profile.blog && (
+                      <a
+                        href={profile.blog.startsWith('http') ? profile.blog : `https://${profile.blog}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 truncate max-w-xs transition-colors"
+                      >
+                        <Link2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate">{profile.blog.replace(/^https?:\/\//, '')}</span>
+                      </a>
+                    )}
+
+                    {memberSinceFormatted && (
+                      <span className="inline-flex items-center gap-1.5 truncate">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{t.metricMemberSince}: {memberSinceFormatted}</span>
+                      </span>
+                    )}
+                  </div>
                 )}
 
                 {/* 6 Hızlı Metrik Kartı Grid */}
@@ -852,6 +950,93 @@ export default function GithubDashboard(): React.ReactElement {
                   </button>
 
                 </div>
+
+                {/* 2. Düzey Hesap & Repo Metrikleri */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+                  <div className="p-3 bg-slate-50/70 dark:bg-slate-950/50 border border-slate-200/80 dark:border-slate-800 rounded-lg flex items-center gap-3">
+                    <div className="p-2 rounded-md bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 shrink-0">
+                      <GitFork className="w-4 h-4" />
+                    </div>
+                    <div className="truncate">
+                      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">{t.metricTotalForks}</span>
+                      <span className="font-mono text-base font-bold text-slate-900 dark:text-slate-100">{totalForks}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-slate-50/70 dark:bg-slate-950/50 border border-slate-200/80 dark:border-slate-800 rounded-lg flex items-center gap-3">
+                    <div className="p-2 rounded-md bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 shrink-0">
+                      <BookOpen className="w-4 h-4" />
+                    </div>
+                    <div className="truncate">
+                      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">{t.metricGists}</span>
+                      <span className="font-mono text-base font-bold text-slate-900 dark:text-slate-100">{profile.public_gists || 0}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-slate-50/70 dark:bg-slate-950/50 border border-slate-200/80 dark:border-slate-800 rounded-lg flex items-center gap-3">
+                    <div className="p-2 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 shrink-0">
+                      <Code2 className="w-4 h-4" />
+                    </div>
+                    <div className="truncate">
+                      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">{t.metricPrimaryLang}</span>
+                      <span className="font-mono text-base font-bold text-slate-900 dark:text-slate-100 truncate block">
+                        {topLanguage ? topLanguage.language : '—'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-slate-50/70 dark:bg-slate-950/50 border border-slate-200/80 dark:border-slate-800 rounded-lg flex items-center gap-3">
+                    <div className="p-2 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 shrink-0">
+                      <FolderGit2 className="w-4 h-4" />
+                    </div>
+                    <div className="truncate">
+                      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">{t.metricSources}</span>
+                      <span className="font-mono text-base font-bold text-slate-900 dark:text-slate-100">
+                        {repoBreakdown.sources} <span className="text-xs text-slate-400 font-normal">/ {repos.length}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Yıllık Commit & Katkı Grafiği Paneli */}
+                <div className="p-4 sm:p-5 bg-slate-50/60 dark:bg-slate-950/50 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 rounded-md bg-cyan-100 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400">
+                        <Activity className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                          {t.commitActivityTitle}
+                        </h4>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {t.commitActivitySubtitle}
+                        </p>
+                      </div>
+                    </div>
+
+                    <a
+                      href={`https://github.com/${profile.login}?tab=overview`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors self-start sm:self-auto"
+                    >
+                      <span>{t.viewOnGithub}</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+
+                  {/* SVG Grafiği */}
+                  <div className="overflow-x-auto py-2 px-1 bg-white/60 dark:bg-slate-900/40 rounded-lg border border-slate-200/60 dark:border-slate-800/80">
+                    <img
+                      src={`https://ghchart.rshah.org/${theme === 'dark' ? '06b6d4' : '0284c7'}/${profile.login}`}
+                      alt={`${profile.login} GitHub Contribution Chart`}
+                      className="w-full min-w-[650px] max-h-[140px] object-contain mx-auto select-none"
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+
               </div>
             )}
           </section>

@@ -101,6 +101,16 @@ export interface TranslationSchema {
   noReposMsg: string;
   forkBadge: string;
   repoCountLabel: (count: number) => string;
+
+  // Extended Profile & Activity Metrics
+  commitActivityTitle: string;
+  commitActivitySubtitle: string;
+  viewOnGithub: string;
+  metricGists: string;
+  metricTotalForks: string;
+  metricPrimaryLang: string;
+  metricMemberSince: string;
+  metricSources: string;
 }
 
 export const translations: Record<Language, TranslationSchema> = {
@@ -197,7 +207,16 @@ export const translations: Record<Language, TranslationSchema> = {
     noReposTitle: 'Depo Bulunamadı',
     noReposMsg: 'Arama kriterlerinize uygun herhangi bir depo bulunamadı.',
     forkBadge: 'Fork',
-    repoCountLabel: (count) => `${count} Depo`
+    repoCountLabel: (count) => `${count} Depo`,
+
+    commitActivityTitle: 'Yıllık Commit & Katkı Grafiği',
+    commitActivitySubtitle: 'Son 1 yıldaki kamuya açık commit, PR ve katkı yoğunluğu',
+    viewOnGithub: 'GitHub\'da İncele',
+    metricGists: 'Kamu Gistleri',
+    metricTotalForks: 'Alınan Forklar',
+    metricPrimaryLang: 'Baskın Dil',
+    metricMemberSince: 'Katılma Tarihi',
+    metricSources: 'Kaynak / Özgün'
   },
   en: {
     heroBadge: 'GitHub Unfollowers & Profile Analytics',
@@ -292,7 +311,16 @@ export const translations: Record<Language, TranslationSchema> = {
     noReposTitle: 'No Repositories Found',
     noReposMsg: 'No repositories matched your search query.',
     forkBadge: 'Fork',
-    repoCountLabel: (count) => `${count} Repositories`
+    repoCountLabel: (count) => `${count} Repositories`,
+
+    commitActivityTitle: 'Annual Commit & Contribution Graph',
+    commitActivitySubtitle: 'Public contribution density and commits over the past year',
+    viewOnGithub: 'View on GitHub',
+    metricGists: 'Public Gists',
+    metricTotalForks: 'Total Forks',
+    metricPrimaryLang: 'Primary Language',
+    metricMemberSince: 'Member Since',
+    metricSources: 'Source Repos'
   },
   es: {
     heroBadge: 'No Seguidores y Analizador de Perfil de GitHub',
@@ -387,7 +415,16 @@ export const translations: Record<Language, TranslationSchema> = {
     noReposTitle: 'No se encontraron repositorios',
     noReposMsg: 'Ningún repositorio coincide con tu búsqueda.',
     forkBadge: 'Bifurcación',
-    repoCountLabel: (count) => `${count} Repositorios`
+    repoCountLabel: (count) => `${count} Repositorios`,
+
+    commitActivityTitle: 'Gráfico Anual de Commits y Contribuciones',
+    commitActivitySubtitle: 'Densidad de contribuciones públicas y commits durante el último año',
+    viewOnGithub: 'Ver en GitHub',
+    metricGists: 'Gists Públicos',
+    metricTotalForks: 'Total Bifurcaciones',
+    metricPrimaryLang: 'Lenguaje Principal',
+    metricMemberSince: 'Miembro Desde',
+    metricSources: 'Repositorios Fuente'
   },
   de: {
     heroBadge: 'GitHub Entfolger & Profil-Analytics',
@@ -482,7 +519,16 @@ export const translations: Record<Language, TranslationSchema> = {
     noReposTitle: 'Keine Repositories gefunden',
     noReposMsg: 'Keine Repositories entsprechen deiner Suchanfrage.',
     forkBadge: 'Fork',
-    repoCountLabel: (count) => `${count} Repositories`
+    repoCountLabel: (count) => `${count} Repositories`,
+
+    commitActivityTitle: 'Jährliches Commit- & Beitragsdiagramm',
+    commitActivitySubtitle: 'Öffentliche Beitragsdichte und Commits im vergangenen Jahr',
+    viewOnGithub: 'Auf GitHub ansehen',
+    metricGists: 'Öffentliche Gists',
+    metricTotalForks: 'Gesamt-Forks',
+    metricPrimaryLang: 'Hauptsprache',
+    metricMemberSince: 'Mitglied seit',
+    metricSources: 'Quell-Repos'
   },
   fr: {
     heroBadge: 'Désabonnements & Analyse de Profil GitHub',
@@ -577,6 +623,15 @@ export const translations: Record<Language, TranslationSchema> = {
     noReposTitle: 'Aucun dépôt trouvé',
     noReposMsg: 'Aucun dépôt ne correspond à votre recherche.',
     forkBadge: 'Fork',
-    repoCountLabel: (count) => `${count} Dépôts`
+    repoCountLabel: (count) => `${count} Dépôts`,
+
+    commitActivityTitle: 'Graphique Annuel des Commits et Contributions',
+    commitActivitySubtitle: 'Densité des contributions publiques et commits au cours de l\'année écoulée',
+    viewOnGithub: 'Voir sur GitHub',
+    metricGists: 'Gists Publics',
+    metricTotalForks: 'Total Forks',
+    metricPrimaryLang: 'Langage Principal',
+    metricMemberSince: 'Membre depuis',
+    metricSources: 'Dépôts Sources'
   }
 };
