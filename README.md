@@ -35,7 +35,7 @@ Additionally, it aggregates high-level profile statistics, including total starg
 - **Stargazer Aggregation**: Queries public repositories to compute total star counts.
 - **Optional Personal Access Token (PAT)**: Authenticate with a personal token to increase API limits from 60 to 5,000 requests per hour.
 - **Client-Side Privacy**: Runs 100% in the browser. Personal access tokens are stored only in `localStorage` and never transmitted to third-party servers.
-- **Bilingual Interface**: One-click language switching between English and Turkish.
+- **Multilingual Interface**: Integrated support for 5 languages: English, Türkçe, Español, Deutsch, and Français.
 - **Theme Support**: Dark mode and light mode based on user preference.
 - **Data Export**: Export filtered user lists to CSV or JSON formats.
 - **Search & Filtering**: Real-time username search and alphabetical (A-Z / Z-A) sorting.

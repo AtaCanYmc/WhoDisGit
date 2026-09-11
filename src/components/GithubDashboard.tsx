@@ -19,14 +19,11 @@ import {
   Eye,
   EyeOff,
   Github,
-  Sparkles,
   ArrowUpDown,
   Filter,
   Trash2,
-  Globe,
-  Sun,
-  Moon,
-  Info
+  Info,
+  Settings
 } from 'lucide-react';
 
 import type {
@@ -42,6 +39,7 @@ import type {
 } from '../types/github';
 
 import { translations } from '../i18n/translations';
+import SettingsModal from './SettingsModal';
 
 /**
  * WhoDisGit - GitHub Unfollowers & Profile Analytics Dashboard (TypeScript TSX)
@@ -68,14 +66,10 @@ export default function GithubDashboard(): React.ReactElement {
     localStorage.setItem('whodisgit_theme', theme);
   }, [theme]);
 
-  const toggleTheme = (): void => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
-
   // --- Dil Seçimi Durumu (i18n) ---
   const [lang, setLang] = useState<Language>(() => {
     const savedLang = localStorage.getItem('whodisgit_lang') as Language;
-    return savedLang === 'en' || savedLang === 'tr' ? savedLang : 'tr';
+    return (['tr', 'en', 'es', 'de', 'fr'] as Language[]).includes(savedLang) ? savedLang : 'tr';
   });
 
   const t = translations[lang];
@@ -84,6 +78,9 @@ export default function GithubDashboard(): React.ReactElement {
     setLang(newLang);
     localStorage.setItem('whodisgit_lang', newLang);
   };
+
+  // --- Ayarlar Modalı Durumu ---
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
   // --- Form & Kimlik Doğrulama Durumları ---
   const [username, setUsername] = useState<string>('');
@@ -422,81 +419,58 @@ export default function GithubDashboard(): React.ReactElement {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       
-      {/* ==================== DİL SEÇİCİ & TEMA BUTONU & HERO / HEADER ALANI ==================== */}
-      <header className="relative text-center space-y-4 pt-4">
-        
-        {/* Üst Sağ: Tema (Koyu/Açık) ve Dil Seçici Kontrolleri */}
-        <div className="absolute top-0 right-0 flex items-center gap-2">
-          
-          {/* Theme Toggle Button */}
-          <button
-            onClick={toggleTheme}
-            className="p-2 bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg backdrop-blur-md text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 transition-all cursor-pointer"
-            title={theme === 'dark' ? t.themeLight : t.themeDark}
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
-          </button>
+      {/* ==================== TOP NAVIGATION & BRAND ==================== */}
+      <header className="border-b border-slate-200 dark:border-slate-800/80 pb-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-950">
+              <Github className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                  WhoDis<span className="text-cyan-600 dark:text-cyan-400">{t.heroTitleSuffix}</span>
+                </h1>
+                <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800 text-slate-500">
+                  v1.0
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block mt-0.5">
+                {t.heroSubtitle}
+              </p>
+            </div>
+          </div>
 
-          {/* Language Switcher Pill */}
-          <div className="flex items-center gap-1 p-1 bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg backdrop-blur-md">
-            <Globe className="w-4 h-4 text-slate-400 ml-1.5" />
+          <div className="flex items-center gap-2">
+            {/* Settings Button */}
             <button
-              onClick={() => handleLanguageChange('tr')}
-              className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                lang === 'tr'
-                  ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
+              onClick={() => setIsSettingsOpen(true)}
+              className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors inline-flex items-center gap-1.5 text-xs font-medium cursor-pointer"
+              title={t.settingsTitle}
+              aria-label={t.settingsTitle}
             >
-              🇹🇷 TR
-            </button>
-            <button
-              onClick={() => handleLanguageChange('en')}
-              className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                lang === 'en'
-                  ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              🇬🇧 EN
+              <Settings className="w-3.5 h-3.5 text-slate-500" />
+              <span>{t.settingsTitle}</span>
             </button>
           </div>
         </div>
-
-        {/* Hero Rozeti */}
-        <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-900/90 border border-cyan-500/40 text-cyan-600 dark:text-cyan-400 text-sm font-medium shadow-lg shadow-cyan-500/10 backdrop-blur-md">
-          <Sparkles className="w-4 h-4 text-cyan-500 dark:text-cyan-400 animate-pulse" />
-          <span>{t.heroBadge}</span>
-        </div>
-
-        {/* Başlık */}
-        <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-cyan-600 dark:from-white dark:via-slate-200 dark:to-cyan-400 bg-clip-text text-transparent">
-          WhoDis<span className="text-cyan-500 dark:text-cyan-400">{t.heroTitleSuffix}</span>
-        </h1>
-
-        <p className="max-w-2xl mx-auto text-slate-600 dark:text-slate-400 text-base sm:text-lg font-light">
-          {t.heroSubtitle}
-        </p>
       </header>
 
-      {/* ==================== FORM / INPUT ALANI ==================== */}
-      <section className="bg-white/90 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden transition-all">
-        <div className="absolute -top-24 -right-24 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        <form onSubmit={handleAnalyze} className="space-y-6 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* ==================== WORKBENCH / QUERY SECTION ==================== */}
+      <section className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6 shadow-sm">
+        <form onSubmit={handleAnalyze} className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             
             {/* 1. GitHub Kullanıcı Adı Input */}
-            <div className="space-y-2">
-              <label htmlFor="github-username" className="block text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center justify-between">
-                <span>{t.usernameLabel} <span className="text-rose-500 dark:text-rose-400">*</span></span>
+            <div className="space-y-1.5">
+              <label htmlFor="github-username" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                {t.usernameLabel} <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                  <Github className="w-5 h-5" />
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Github className="w-4 h-4" />
                 </div>
                 <input
                   id="github-username"
@@ -504,30 +478,30 @@ export default function GithubDashboard(): React.ReactElement {
                   placeholder={t.usernamePlaceholder}
                   value={username}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3.5 bg-slate-100/90 dark:bg-slate-950/70 border border-slate-300 dark:border-slate-700/80 rounded-2xl text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all font-medium"
+                  className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 text-sm font-medium focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 focus:ring-1 focus:ring-slate-400 transition-all"
                   required
                 />
               </div>
             </div>
 
             {/* 2. Personal Access Token (PAT) Input */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label htmlFor="github-pat" className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
-                  {t.patLabel} <span className="text-slate-400 text-xs font-normal">{t.patOptional}</span>
+                <label htmlFor="github-pat" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                  {t.patLabel} <span className="text-slate-400 text-[11px] font-normal lowercase">({t.patOptional})</span>
                 </label>
                 <a
                   href="https://github.com/settings/tokens/new?scopes=read:user&description=WhoDisGit"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 transition-colors"
+                  className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline inline-flex items-center gap-1"
                 >
                   <Key className="w-3 h-3" /> {t.patCreateToken}
                 </a>
               </div>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                  <Key className="w-5 h-5" />
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Key className="w-4 h-4" />
                 </div>
                 <input
                   id="github-pat"
@@ -535,15 +509,15 @@ export default function GithubDashboard(): React.ReactElement {
                   placeholder={t.patPlaceholder}
                   value={pat}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPat(e.target.value)}
-                  className="w-full pl-11 pr-12 py-3.5 bg-slate-100/90 dark:bg-slate-950/70 border border-slate-300 dark:border-slate-700/80 rounded-2xl text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all font-mono text-sm"
+                  className="w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 text-sm font-mono focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 focus:ring-1 focus:ring-slate-400 transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPat(!showPat)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                   title={showPat ? 'Gizle' : 'Göster'}
                 >
-                  {showPat ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPat ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
@@ -552,49 +526,53 @@ export default function GithubDashboard(): React.ReactElement {
           {/* Geçmiş Aramalar Hızlı Seçim */}
           {recentSearches.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap pt-1">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t.recentSearches}</span>
+              <span className="text-xs text-slate-500 font-medium">{t.recentSearches}</span>
               {recentSearches.map((searchedUser) => (
-                <button
+                <span
                   key={searchedUser}
-                  type="button"
-                  onClick={() => setUsername(searchedUser)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/60 rounded-xl text-xs text-slate-700 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-300 transition-all group cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-md text-xs text-slate-700 dark:text-slate-300 font-mono"
                 >
-                  <span>@{searchedUser}</span>
-                  <span
+                  <button
+                    type="button"
+                    onClick={() => setUsername(searchedUser)}
+                    className="hover:text-cyan-600 dark:hover:text-cyan-400 cursor-pointer"
+                  >
+                    @{searchedUser}
+                  </button>
+                  <button
+                    type="button"
                     onClick={(e: React.MouseEvent) => removeRecentSearch(searchedUser, e)}
-                    className="text-slate-400 hover:text-rose-500 rounded p-0.5"
+                    className="text-slate-400 hover:text-rose-500 rounded cursor-pointer leading-none"
                     title="Kaldır"
                   >
                     ×
-                  </span>
-                </button>
+                  </button>
+                </span>
               ))}
             </div>
           )}
 
           {/* Alt Seçenekler ve Analiz Butonu */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-200 dark:border-slate-800/80">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800/80">
             <div className="flex items-center gap-4 w-full sm:w-auto">
               <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2.5 cursor-pointer group">
+                <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-cyan-500 focus:ring-cyan-500/30 bg-white dark:bg-slate-950 cursor-pointer"
+                    className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-slate-900 focus:ring-slate-400 bg-white dark:bg-slate-950"
                   />
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                  <span className="text-xs text-slate-600 dark:text-slate-300">
                     {t.rememberMe}
                   </span>
                 </label>
 
                 {/* Info Tooltip */}
                 <div className="relative group/tooltip inline-flex items-center">
-                  <Info className="w-4 h-4 text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 cursor-pointer transition-colors" />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block w-72 p-3 bg-slate-900 dark:bg-slate-800 text-slate-100 dark:text-slate-200 text-xs rounded-2xl shadow-2xl border border-slate-700 dark:border-slate-600 z-30 transition-all leading-relaxed">
+                  <Info className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block w-64 p-2.5 bg-slate-900 dark:bg-slate-800 text-slate-200 text-xs rounded-lg shadow-xl border border-slate-700 z-30 leading-relaxed">
                     {t.rememberInfoTooltip}
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900 dark:border-t-slate-800"></div>
                   </div>
                 </div>
               </div>
@@ -603,10 +581,10 @@ export default function GithubDashboard(): React.ReactElement {
                 <button
                   type="button"
                   onClick={handleClearSavedData}
-                  className="text-xs text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 flex items-center gap-1 transition-colors cursor-pointer ml-2"
+                  className="text-xs text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 flex items-center gap-1 transition-colors cursor-pointer"
                   title="Kayıtlı bilgileri temizle"
                 >
-                  <Trash2 className="w-3.5 h-3.5" /> {t.clearRecords}
+                  <Trash2 className="w-3 h-3" /> {t.clearRecords}
                 </button>
               )}
             </div>
@@ -614,16 +592,16 @@ export default function GithubDashboard(): React.ReactElement {
             <button
               type="submit"
               disabled={loading}
-              className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-semibold rounded-2xl shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-white dark:text-slate-950 text-sm font-semibold rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               {loading ? (
                 <>
-                  <RefreshCw className="w-5 h-5 animate-spin text-white" />
+                  <RefreshCw className="w-4 h-4 animate-spin" />
                   <span>{t.analyzingBtn}</span>
                 </>
               ) : (
                 <>
-                  <Search className="w-5 h-5" />
+                  <Search className="w-4 h-4" />
                   <span>{t.analyzeBtn}</span>
                 </>
               )}
@@ -631,17 +609,15 @@ export default function GithubDashboard(): React.ReactElement {
           </div>
         </form>
 
-        {/* Yüklenme Durum Çubuğu */}
+        {/* Loading Progress */}
         {loading && (
-          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800/60 animate-fade-in">
-            <div className="flex items-center justify-between text-sm text-cyan-600 dark:text-cyan-400 font-medium mb-2">
-              <span className="flex items-center gap-2">
-                <RefreshCw className="w-4 h-4 animate-spin text-cyan-600 dark:text-cyan-400" />
-                {statusMessage}
-              </span>
+          <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 font-mono mb-2">
+              <RefreshCw className="w-3.5 h-3.5 animate-spin text-slate-500" />
+              <span>{statusMessage}</span>
             </div>
-            <div className="w-full bg-slate-200 dark:bg-slate-950 rounded-full h-2 overflow-hidden">
-              <div className="bg-gradient-to-r from-cyan-500 to-indigo-500 h-full w-full animate-pulse"></div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+              <div className="bg-slate-900 dark:bg-slate-100 h-full w-2/5 animate-pulse"></div>
             </div>
           </div>
         )}
@@ -649,48 +625,45 @@ export default function GithubDashboard(): React.ReactElement {
 
       {/* ==================== HATA BİLDİRİM KUTUSU ==================== */}
       {error && (
-        <section className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/80 rounded-3xl p-6 shadow-xl backdrop-blur-xl flex items-start gap-4 text-rose-800 dark:text-rose-200 animate-fade-in">
-          <div className="p-3 bg-rose-100 dark:bg-rose-900/50 rounded-2xl text-rose-600 dark:text-rose-400 shrink-0">
-            {error.code === 403 ? <ShieldAlert className="w-6 h-6" /> : <AlertTriangle className="w-6 h-6" />}
+        <section className="bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 rounded-xl p-4 flex items-start gap-3.5 text-rose-800 dark:text-rose-300">
+          <div className="p-1.5 bg-rose-100 dark:bg-rose-900/40 rounded-md text-rose-600 dark:text-rose-400 shrink-0">
+            {error.code === 403 ? <ShieldAlert className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
           </div>
-          <div className="space-y-1">
-            <h3 className="font-bold text-lg text-rose-900 dark:text-rose-300">{error.title}</h3>
-            <p className="text-sm text-rose-700 dark:text-rose-200/90 leading-relaxed">{error.message}</p>
+          <div className="space-y-0.5">
+            <h3 className="font-semibold text-sm text-rose-900 dark:text-rose-200">{error.title}</h3>
+            <p className="text-xs text-rose-700 dark:text-rose-300/90 leading-relaxed">{error.message}</p>
           </div>
         </section>
       )}
 
       {/* ==================== SONUÇ KARTLARI VE EKRAN ==================== */}
       {profile && !loading && (
-        <main className="space-y-10 animate-fade-in">
+        <main className="space-y-6">
           
-          {/* 1. PROFİL KARTI VE ÖZET METRİKLER */}
-          <section className="bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl space-y-8">
+          {/* 1. PROFİL KARTI VE METRİKLER */}
+          <section className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6 shadow-sm space-y-6">
             
             {/* Üst Bilgiler: Avatar & Kullanıcı Künyesi */}
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
-              <div className="relative group shrink-0">
-                <img
-                  src={profile.avatar_url}
-                  alt={profile.name || profile.login}
-                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-slate-100 dark:border-slate-800 shadow-xl object-cover"
-                />
-                <div className="absolute inset-0 rounded-full border-2 border-cyan-500/40 pointer-events-none group-hover:scale-105 transition-transform"></div>
-              </div>
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
+              <img
+                src={profile.avatar_url}
+                alt={profile.name || profile.login}
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-slate-200 dark:border-slate-800 object-cover shrink-0"
+              />
 
-              <div className="space-y-2 flex-1">
+              <div className="space-y-1 flex-1">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
-                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
+                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                       {profile.name || profile.login}
                     </h2>
                     <a
                       href={profile.html_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-cyan-600 dark:text-cyan-400 hover:underline font-medium inline-flex items-center gap-1 text-sm mt-0.5"
+                      className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-mono inline-flex items-center gap-1 text-xs mt-0.5"
                     >
-                      @{profile.login} <ExternalLink className="w-3.5 h-3.5" />
+                      @{profile.login} <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
 
@@ -698,14 +671,14 @@ export default function GithubDashboard(): React.ReactElement {
                     href={profile.html_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700/80 inline-flex items-center justify-center gap-2 transition-all self-center sm:self-auto"
+                    className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 inline-flex items-center justify-center gap-1.5 transition-all self-center sm:self-auto"
                   >
-                    <Github className="w-4 h-4" /> {t.openGithubProfile}
+                    <Github className="w-3.5 h-3.5" /> {t.openGithubProfile}
                   </a>
                 </div>
 
                 {profile.bio && (
-                  <p className="text-slate-600 dark:text-slate-300 text-sm max-w-3xl leading-relaxed pt-1 font-normal">
+                  <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm leading-relaxed max-w-2xl pt-0.5">
                     {profile.bio}
                   </p>
                 )}
@@ -713,77 +686,77 @@ export default function GithubDashboard(): React.ReactElement {
             </div>
 
             {/* 6 Hızlı Metrik Kartı Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-5 border-t border-slate-100 dark:border-slate-800">
               
               {/* 1. Geri Takip Etmeyenler */}
-              <div className="bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-950/60 dark:to-slate-900 border border-rose-200 dark:border-rose-800/60 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
-                <div className="flex items-center justify-between text-rose-600 dark:text-rose-400 mb-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider">{t.metricUnfollowers}</span>
-                  <UserX className="w-5 h-5" />
+              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3.5 flex flex-col justify-between">
+                <div className="flex items-center justify-between text-rose-600 dark:text-rose-400 mb-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricUnfollowers}</span>
+                  <UserX className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-3xl font-extrabold text-rose-600 dark:text-rose-400">{unfollowers.length}</span>
-                  <p className="text-[11px] text-rose-700/80 dark:text-rose-300/70 mt-0.5">{t.metricUnfollowersDesc}</p>
+                  <span className="font-mono text-2xl font-bold text-rose-600 dark:text-rose-400">{unfollowers.length}</span>
+                  <p className="text-[10px] text-slate-500 mt-0.5 truncate">{t.metricUnfollowersDesc}</p>
                 </div>
               </div>
 
               {/* 2. Toplam Yıldız Sayısı */}
-              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
-                <div className="flex items-center justify-between text-amber-500 dark:text-amber-400 mb-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider">{t.metricTotalStars}</span>
-                  <Star className="w-5 h-5" />
+              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3.5 flex flex-col justify-between">
+                <div className="flex items-center justify-between text-amber-500 dark:text-amber-400 mb-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricTotalStars}</span>
+                  <Star className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">{totalStars}</span>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{t.metricTotalStarsDesc}</p>
+                  <span className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">{totalStars}</span>
+                  <p className="text-[10px] text-slate-500 mt-0.5 truncate">{t.metricTotalStarsDesc}</p>
                 </div>
               </div>
 
               {/* 3. Takipçi Sayısı */}
-              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
-                <div className="flex items-center justify-between text-cyan-600 dark:text-cyan-400 mb-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider">{t.metricFollowers}</span>
-                  <Users className="w-5 h-5" />
+              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3.5 flex flex-col justify-between">
+                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 mb-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricFollowers}</span>
+                  <Users className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">{profile.followers}</span>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{t.metricFollowersDesc}</p>
+                  <span className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">{profile.followers}</span>
+                  <p className="text-[10px] text-slate-500 mt-0.5 truncate">{t.metricFollowersDesc}</p>
                 </div>
               </div>
 
               {/* 4. Takip Edilen Sayısı */}
-              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
-                <div className="flex items-center justify-between text-indigo-600 dark:text-indigo-400 mb-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider">{t.metricFollowing}</span>
-                  <UserCheck className="w-5 h-5" />
+              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3.5 flex flex-col justify-between">
+                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 mb-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricFollowing}</span>
+                  <UserCheck className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">{profile.following}</span>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{t.metricFollowingDesc}</p>
+                  <span className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">{profile.following}</span>
+                  <p className="text-[10px] text-slate-500 mt-0.5 truncate">{t.metricFollowingDesc}</p>
                 </div>
               </div>
 
               {/* 5. Karşılıklı Takip */}
-              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
-                <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 mb-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider">{t.metricMutuals}</span>
-                  <HeartHandshake className="w-5 h-5" />
+              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3.5 flex flex-col justify-between">
+                <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 mb-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricMutuals}</span>
+                  <HeartHandshake className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">{mutuals.length}</span>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{t.metricMutualsDesc}</p>
+                  <span className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">{mutuals.length}</span>
+                  <p className="text-[10px] text-slate-500 mt-0.5 truncate">{t.metricMutualsDesc}</p>
                 </div>
               </div>
 
               {/* 6. Repolar */}
-              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
-                <div className="flex items-center justify-between text-purple-600 dark:text-purple-400 mb-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider">{t.metricRepos}</span>
-                  <BookOpen className="w-5 h-5" />
+              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3.5 flex flex-col justify-between">
+                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 mb-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider">{t.metricRepos}</span>
+                  <BookOpen className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">{profile.public_repos}</span>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{t.metricReposDesc}</p>
+                  <span className="font-mono text-2xl font-bold text-slate-900 dark:text-slate-100">{profile.public_repos}</span>
+                  <p className="text-[10px] text-slate-500 mt-0.5 truncate">{t.metricReposDesc}</p>
                 </div>
               </div>
 
@@ -791,116 +764,132 @@ export default function GithubDashboard(): React.ReactElement {
           </section>
 
           {/* 2. ETKİLEŞİMLİ LİSTE VE SEKMELER (TABS & LIST) */}
-          <section className="bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl space-y-6">
+          <section className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6 shadow-sm space-y-5">
             
             {/* Sekme Butonları (Tabs) */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200 dark:border-slate-800 scrollbar-none">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-slate-100 dark:border-slate-800">
               <button
                 onClick={() => setActiveTab('unfollowers')}
-                className={`px-5 py-3 rounded-2xl font-medium text-sm transition-all shrink-0 flex items-center gap-2.5 cursor-pointer ${
+                className={`px-3.5 py-2 rounded-lg font-medium text-xs transition-colors shrink-0 flex items-center gap-2 cursor-pointer ${
                   activeTab === 'unfollowers'
-                    ? 'bg-rose-500/10 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 dark:border-rose-500/40 shadow-md font-semibold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-950 font-semibold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
-                <UserX className="w-4 h-4" />
+                <UserX className="w-3.5 h-3.5" />
                 <span>{t.tabUnfollowers}</span>
-                <span className={`px-2 py-0.5 text-xs rounded-full ${activeTab === 'unfollowers' ? 'bg-rose-500/20 text-rose-800 dark:text-rose-200 font-bold' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                <span className={`px-1.5 py-0.2 text-[10px] font-mono rounded ${
+                  activeTab === 'unfollowers'
+                    ? 'bg-rose-500 text-white'
+                    : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}>
                   {unfollowers.length}
                 </span>
               </button>
 
               <button
                 onClick={() => setActiveTab('fans')}
-                className={`px-5 py-3 rounded-2xl font-medium text-sm transition-all shrink-0 flex items-center gap-2.5 cursor-pointer ${
+                className={`px-3.5 py-2 rounded-lg font-medium text-xs transition-colors shrink-0 flex items-center gap-2 cursor-pointer ${
                   activeTab === 'fans'
-                    ? 'bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-800 dark:text-cyan-300 border border-cyan-500/30 dark:border-cyan-500/40 shadow-md font-semibold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-950 font-semibold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
-                <UserPlus className="w-4 h-4" />
+                <UserPlus className="w-3.5 h-3.5" />
                 <span>{t.tabFans}</span>
-                <span className={`px-2 py-0.5 text-xs rounded-full ${activeTab === 'fans' ? 'bg-cyan-500/20 text-cyan-900 dark:text-cyan-200 font-bold' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                <span className={`px-1.5 py-0.2 text-[10px] font-mono rounded ${
+                  activeTab === 'fans'
+                    ? 'bg-slate-700 text-white dark:bg-slate-300 dark:text-slate-950'
+                    : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}>
                   {fans.length}
                 </span>
               </button>
 
               <button
                 onClick={() => setActiveTab('mutuals')}
-                className={`px-5 py-3 rounded-2xl font-medium text-sm transition-all shrink-0 flex items-center gap-2.5 cursor-pointer ${
+                className={`px-3.5 py-2 rounded-lg font-medium text-xs transition-colors shrink-0 flex items-center gap-2 cursor-pointer ${
                   activeTab === 'mutuals'
-                    ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 dark:border-emerald-500/40 shadow-md font-semibold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-950 font-semibold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
-                <HeartHandshake className="w-4 h-4" />
+                <HeartHandshake className="w-3.5 h-3.5" />
                 <span>{t.tabMutuals}</span>
-                <span className={`px-2 py-0.5 text-xs rounded-full ${activeTab === 'mutuals' ? 'bg-emerald-500/20 text-emerald-900 dark:text-emerald-200 font-bold' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                <span className={`px-1.5 py-0.2 text-[10px] font-mono rounded ${
+                  activeTab === 'mutuals'
+                    ? 'bg-slate-700 text-white dark:bg-slate-300 dark:text-slate-950'
+                    : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}>
                   {mutuals.length}
                 </span>
               </button>
 
               <button
                 onClick={() => setActiveTab('following')}
-                className={`px-5 py-3 rounded-2xl font-medium text-sm transition-all shrink-0 flex items-center gap-2.5 cursor-pointer ${
+                className={`px-3.5 py-2 rounded-lg font-medium text-xs transition-colors shrink-0 flex items-center gap-2 cursor-pointer ${
                   activeTab === 'following'
-                    ? 'bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-300 border border-indigo-500/30 dark:border-indigo-500/40 shadow-md font-semibold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-950 font-semibold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
-                <Users className="w-4 h-4" />
+                <Users className="w-3.5 h-3.5" />
                 <span>{t.tabFollowing}</span>
-                <span className={`px-2 py-0.5 text-xs rounded-full ${activeTab === 'following' ? 'bg-indigo-500/20 text-indigo-900 dark:text-indigo-200 font-bold' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                <span className={`px-1.5 py-0.2 text-[10px] font-mono rounded ${
+                  activeTab === 'following'
+                    ? 'bg-slate-700 text-white dark:bg-slate-300 dark:text-slate-950'
+                    : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}>
                   {following.length}
                 </span>
               </button>
             </div>
 
             {/* Arama, Sıralama ve Dışa Aktar Kontrol Çubuğu */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
               
               {/* Canlı Liste İçi Arama */}
-              <div className="relative w-full sm:w-72">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Filter className="w-4 h-4" />
+              <div className="relative w-full sm:w-64">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <Filter className="w-3.5 h-3.5" />
                 </div>
                 <input
                   type="text"
                   placeholder={t.searchPlaceholder}
                   value={searchFilter}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchFilter(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-100/90 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-800 rounded-xl text-slate-900 dark:text-slate-100 text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                  className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 text-xs placeholder-slate-400 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600"
                 />
               </div>
 
               {/* Sıralama ve Aktarma Butonları */}
-              <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <button
                   onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                  className="px-3 py-2 bg-slate-100/90 dark:bg-slate-950/80 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 rounded-xl text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                   title="A-Z / Z-A Sırala"
                 >
-                  <ArrowUpDown className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                  <ArrowUpDown className="w-3 h-3 text-slate-500" />
                   <span>{sortOrder === 'asc' ? t.sortAsc : t.sortDesc}</span>
                 </button>
 
-                <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-800 pl-3">
+                <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-800 pl-2">
                   <button
                     onClick={() => exportData('csv')}
                     disabled={currentList.length === 0}
-                    className="px-3 py-2 bg-slate-100/90 dark:bg-slate-950/80 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-40 border border-slate-300 dark:border-slate-800 rounded-xl text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                     title="CSV olarak indir"
                   >
-                    <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <Download className="w-3 h-3 text-slate-500" />
                     <span>{t.exportCsv}</span>
                   </button>
                   <button
                     onClick={() => exportData('json')}
                     disabled={currentList.length === 0}
-                    className="px-3 py-2 bg-slate-100/90 dark:bg-slate-950/80 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-40 border border-slate-300 dark:border-slate-800 rounded-xl text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                     title="JSON olarak indir"
                   >
-                    <Download className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                    <Download className="w-3 h-3 text-slate-500" />
                     <span>{t.exportJson}</span>
                   </button>
                 </div>
@@ -909,35 +898,35 @@ export default function GithubDashboard(): React.ReactElement {
 
             {/* KULLANICI KARTLARI GRID / LİSTESİ */}
             {currentList.length === 0 ? (
-              <div className="text-center py-16 bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-200 dark:border-slate-800/60 space-y-3">
-                <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 mx-auto flex items-center justify-center">
-                  <UserX className="w-6 h-6" />
+              <div className="text-center py-12 bg-slate-50 dark:bg-slate-950/40 rounded-lg border border-slate-200 dark:border-slate-800 space-y-2">
+                <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 mx-auto flex items-center justify-center">
+                  <UserX className="w-5 h-5" />
                 </div>
-                <h4 className="text-slate-800 dark:text-slate-300 font-semibold text-base">{t.noUsersTitle}</h4>
-                <p className="text-slate-500 dark:text-slate-500 text-xs max-w-sm mx-auto">
+                <h4 className="text-slate-800 dark:text-slate-200 font-semibold text-sm">{t.noUsersTitle}</h4>
+                <p className="text-slate-500 text-xs max-w-sm mx-auto">
                   {searchFilter ? t.noUsersMsgSearch : t.noUsersMsgTab}
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[650px] overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-[600px] overflow-y-auto pr-1">
                 {currentList.map((user) => (
                   <div
                     key={user.id || user.login}
-                    className="bg-white dark:bg-slate-950/60 hover:bg-slate-50 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 rounded-2xl p-4 transition-all duration-200 flex items-center justify-between gap-3 group shadow-sm hover:shadow-md"
+                    className="bg-slate-50/50 dark:bg-slate-950/40 hover:bg-white dark:hover:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 rounded-lg p-3 transition-colors flex items-center justify-between gap-2.5"
                   >
                     {/* Profil Resmi & İsim */}
-                    <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="flex items-center gap-2.5 overflow-hidden">
                       <img
                         src={user.avatar_url}
                         alt={user.login}
-                        className="w-11 h-11 rounded-full border border-slate-200 dark:border-slate-700 object-cover shrink-0"
+                        className="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-800 object-cover shrink-0"
                         loading="lazy"
                       />
                       <div className="truncate">
-                        <h4 className="font-semibold text-slate-900 dark:text-slate-200 text-sm truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors">
+                        <h4 className="font-semibold font-mono text-slate-900 dark:text-slate-200 text-xs truncate">
                           {user.login}
                         </h4>
-                        <span className="text-[11px] text-slate-500 truncate block">{t.userGithubBadge}</span>
+                        <span className="text-[10px] text-slate-400 truncate block">{t.userGithubBadge}</span>
                       </div>
                     </div>
 
@@ -946,13 +935,13 @@ export default function GithubDashboard(): React.ReactElement {
                       {/* Kullanıcı Adı Kopyala */}
                       <button
                         onClick={() => handleCopyUsername(user.login)}
-                        className="p-2 text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                        className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
                         title={t.copyUsername}
                       >
                         {copiedUser === user.login ? (
-                          <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+                          <Check className="w-3.5 h-3.5 text-emerald-500" />
                         ) : (
-                          <Copy className="w-4 h-4" />
+                          <Copy className="w-3.5 h-3.5" />
                         )}
                       </button>
 
@@ -961,10 +950,10 @@ export default function GithubDashboard(): React.ReactElement {
                         href={user.html_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700/80 transition-all inline-flex items-center gap-1"
+                        className="px-2.5 py-1 bg-white dark:bg-slate-800 hover:bg-slate-900 hover:text-white dark:hover:bg-slate-100 dark:hover:text-slate-950 text-slate-700 dark:text-slate-300 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 transition-colors inline-flex items-center gap-1"
                       >
                         <span>{t.profileBtn}</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
+                        <ExternalLink className="w-3 h-3" />
                       </a>
                     </div>
                   </div>
@@ -978,12 +967,22 @@ export default function GithubDashboard(): React.ReactElement {
       )}
 
       {/* ==================== FOOTER ALANI ==================== */}
-      <footer className="text-center py-6 border-t border-slate-200 dark:border-slate-800/80 text-xs text-slate-500 space-y-2">
+      <footer className="text-center py-6 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 space-y-1">
         <p>WhoDisGit &copy; {new Date().getFullYear()} — {t.footerRights}</p>
-        <p className="text-[11px] text-slate-500 dark:text-slate-600">
+        <p className="text-[11px] text-slate-400 dark:text-slate-500">
           {t.footerPrivacy}
         </p>
       </footer>
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        theme={theme}
+        onThemeChange={setTheme}
+        lang={lang}
+        onLanguageChange={handleLanguageChange}
+      />
 
     </div>
   );
