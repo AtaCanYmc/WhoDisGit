@@ -323,7 +323,7 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 max-h-[600px] overflow-y-auto pr-1">
           {filteredAndSortedRepos.map((repo) => {
             const langColor = repo.language
               ? LANGUAGE_COLORS[repo.language] || '#64748b'
