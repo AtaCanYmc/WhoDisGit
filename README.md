@@ -40,6 +40,7 @@ Additionally, it aggregates high-level profile statistics, including total starg
 - **Theme Support**: Dark mode and light mode based on user preference.
 - **Data Export**: Export filtered user lists and public repositories to CSV or JSON formats.
 - **Search & Filtering**: Real-time username search and alphabetical (A-Z / Z-A) sorting.
+- **PWA Ready**: Complete Web App Manifest, maskable and standard icons (192x192, 512x512, Apple touch icon) for installation on desktop and mobile devices.
 - **Automated CI/CD**: Preconfigured GitHub Actions workflows for continuous integration and automated GitHub Pages deployment.
 
 ---
