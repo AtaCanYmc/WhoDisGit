@@ -1,22 +1,31 @@
-# Security Policy 🔒
+# Security Policy
 
-## Security Overview
+## Supported Versions
 
-**WhoDisGit** prioritizes user security and data privacy. 
+Security updates are applied only to the latest release branch.
 
-### Personal Access Tokens (PAT) & Data Privacy
-- **Client-Side Only**: Your GitHub Personal Access Token (PAT) and username are processed **100% in your local browser**.
-- **Zero Remote Logging**: No credentials, tokens, or profile information are ever transmitted to any third-party server or backend database.
-- **LocalStorage Security**: If you choose the "Remember Info" option, credentials are stored in your browser's `localStorage` and can be deleted at any time using the "Clear Records" button in the application.
+| Version | Supported | Notes |
+| :--- | :---: | :--- |
+| 1.0.x | Yes | Active release branch |
+| < 1.0 | No | Deprecated |
+
+---
+
+## Data Boundary and Client-Side Storage
+
+WhoDisGit operates entirely client-side within the browser execution sandbox.
+
+- **Local Execution**: All GitHub API queries originate directly from the client's browser to `https://api.github.com`. No intermediate proxy, relay, or analytics telemetry service is utilized.
+- **Credential Storage**: Optional GitHub Personal Access Tokens (PAT) and usernames are stored solely within `window.localStorage`. Tokens are never transmitted to any third-party domain.
+- **Local Erasure**: Stored credentials can be cleared instantly via the "Clear Records" control in the application interface or by wiping site storage via browser developer tools.
 
 ---
 
 ## Reporting a Vulnerability
 
-If you discover a potential security vulnerability within WhoDisGit, please report it privately:
+Security vulnerabilities must be reported privately. Do not open public GitHub issues for potential vulnerabilities.
 
-1. Do **NOT** create a public GitHub issue for security vulnerabilities.
-2. Email or privately message the repository maintainers with a description of the issue and steps to reproduce.
-3. We will acknowledge your report within 48 hours and work on a prompt patch.
+1. Submit a report through [GitHub Private Vulnerability Reporting](https://github.com/AtaCanYmc/WhoDisGit/security/advisories/new) or send an encrypted email to `atacanymc@gmail.com`.
+2. Include reproduction steps, affected browser/runtime environment, and potential impact analysis.
+3. The project maintainers will acknowledge receipt within 48 hours and provide remediation timelines prior to public disclosure.
 
-Thank you for helping keep WhoDisGit safe for everyone!
