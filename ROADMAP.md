@@ -19,12 +19,12 @@ Development milestones and planned architectural enhancements for WhoDisGit.
 
 ---
 
-## [1.1.0] - Planned
+## [1.1.0] - Released (2026-11-20)
 
-- [ ] Rate limit exhaustion banner with live visual countdown timer.
-- [ ] Snapshot comparison: diff follower network changes across local sessions.
-- [ ] Additional table export formats (Markdown, NDJSON).
-- [ ] Filter by account creation date and minimum stargazer threshold.
+- [x] Rate limit exhaustion banner with live visual countdown timer.
+- [x] Snapshot comparison: diff follower network changes across local sessions.
+- [x] Additional table export formats (Markdown, NDJSON).
+- [x] Filter by account creation date and minimum stargazer threshold.
 
 ---
 

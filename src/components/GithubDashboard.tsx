@@ -59,12 +59,16 @@ import type {
   SortOrder,
   ExportFormat,
   Language,
-  ThemeMode
+  ThemeMode,
+  NetworkSnapshot,
+  SnapshotDiff
 } from '../types/github';
 
 import { translations } from '../i18n/translations';
 import SettingsModal from './SettingsModal';
 import RepositorySection from './RepositorySection';
+import { RateLimitBanner } from './RateLimitBanner';
+import { SnapshotDiffBanner } from './SnapshotDiffBanner';
 
 /**
  * WhoDisGit - GitHub Unfollowers & Profile Analytics Dashboard (TypeScript TSX)
@@ -144,6 +148,8 @@ export default function GithubDashboard(): React.ReactElement {
   const [repos, setRepos] = useState<GithubRepo[]>([]);
   const [followers, setFollowers] = useState<GithubSimpleUser[]>([]);
   const [following, setFollowing] = useState<GithubSimpleUser[]>([]);
+  const [snapshotDiff, setSnapshotDiff] = useState<SnapshotDiff | null>(null);
+  const [isBaselineSaved, setIsBaselineSaved] = useState<boolean>(false);
 
   // UI / Tab & Filtreleme Durumları
   const [activeTab, setActiveTab] = useState<ActiveTab>('unfollowers');
@@ -247,11 +253,13 @@ export default function GithubDashboard(): React.ReactElement {
       if (!res.ok) {
         if (res.status === 403) {
           const rateLimitReset = res.headers.get('X-RateLimit-Reset');
-          const resetTime = rateLimitReset ? new Date(parseInt(rateLimitReset, 10) * 1000).toLocaleTimeString() : undefined;
+          const resetUnix = rateLimitReset ? parseInt(rateLimitReset, 10) : undefined;
+          const resetTime = resetUnix ? new Date(resetUnix * 1000).toLocaleTimeString() : undefined;
           throw {
             code: 403,
             title: t.errRateLimitTitle,
-            message: t.errRateLimitMsg(resetTime)
+            message: t.errRateLimitMsg(resetTime),
+            rateLimitReset: resetUnix
           } as ApiError;
         } else if (res.status === 401) {
           throw {
@@ -341,25 +349,31 @@ export default function GithubDashboard(): React.ReactElement {
             message: t.errUserNotFoundMsg(cleanUsername)
           });
         } else if (userRes.status === 403) {
+          const rateLimitResetHeader = userRes.headers.get('X-RateLimit-Reset');
+          const resetUnix = rateLimitResetHeader ? parseInt(rateLimitResetHeader, 10) : undefined;
+          const resetTime = resetUnix ? new Date(resetUnix * 1000).toLocaleTimeString() : undefined;
           setError({
             code: 403,
             title: t.errRateLimitTitle,
-            message: t.errRateLimitMsg()
+            message: t.errRateLimitMsg(resetTime),
+            rateLimitReset: resetUnix
           });
+          return;
         } else if (userRes.status === 401) {
           setError({
             code: 401,
             title: t.errUnauthorizedTitle,
             message: t.errUnauthorizedMsg
           });
+          return;
         } else {
           setError({
             code: userRes.status,
             title: t.errGenericTitle,
             message: t.errGenericMsg(userRes.status)
           });
+          return;
         }
-        return;
       }
 
       const userData: GithubUser = await userRes.json();
@@ -375,6 +389,46 @@ export default function GithubDashboard(): React.ReactElement {
       setFollowing(fetchedFollowing);
       setTotalStars(repoData.totalStars);
       setRepos(repoData.repos);
+
+      // Snapshot Comparison
+      const snapshotKey = `whodisgit_snapshot_${cleanUsername.toLowerCase()}`;
+      const storedSnapshotRaw = localStorage.getItem(snapshotKey);
+      if (storedSnapshotRaw) {
+        try {
+          const prevSnapshot: NetworkSnapshot = JSON.parse(storedSnapshotRaw);
+          const prevFollowersMap = new Set(prevSnapshot.followers.map((u) => u.login.toLowerCase()));
+          const currentFollowersMap = new Set(fetchedFollowers.map((u) => u.login.toLowerCase()));
+          const prevFollowingMap = new Set(prevSnapshot.following.map((u) => u.login.toLowerCase()));
+          const currentFollowingMap = new Set(fetchedFollowing.map((u) => u.login.toLowerCase()));
+
+          const newFollowers = fetchedFollowers.filter((u) => !prevFollowersMap.has(u.login.toLowerCase()));
+          const lostFollowers = prevSnapshot.followers.filter((u) => !currentFollowersMap.has(u.login.toLowerCase()));
+          const newFollowing = fetchedFollowing.filter((u) => !prevFollowingMap.has(u.login.toLowerCase()));
+          const lostFollowing = prevSnapshot.following.filter((u) => !currentFollowingMap.has(u.login.toLowerCase()));
+
+          setSnapshotDiff({
+            previousTimestamp: prevSnapshot.timestamp,
+            newFollowers,
+            lostFollowers,
+            newFollowing,
+            lostFollowing
+          });
+          setIsBaselineSaved(false);
+        } catch (e) {
+          console.warn('Failed to parse previous snapshot:', e);
+          setSnapshotDiff(null);
+        }
+      } else {
+        const newSnapshot: NetworkSnapshot = {
+          timestamp: new Date().toISOString(),
+          username: cleanUsername,
+          followers: fetchedFollowers,
+          following: fetchedFollowing
+        };
+        localStorage.setItem(snapshotKey, JSON.stringify(newSnapshot));
+        setSnapshotDiff(null);
+        setIsBaselineSaved(true);
+      }
 
       if (rememberMe) {
         localStorage.setItem('whodisgit_username', cleanUsername);
@@ -392,11 +446,25 @@ export default function GithubDashboard(): React.ReactElement {
       setError({
         code: typedErr.code || 500,
         title: typedErr.title || t.errGenericTitle,
-        message: typedErr.message || t.errGenericMsg()
+        message: typedErr.message || t.errGenericMsg(),
+        rateLimitReset: typedErr.rateLimitReset
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSaveBaselineSnapshot = (): void => {
+    if (!profile) return;
+    const snapshotKey = `whodisgit_snapshot_${profile.login.toLowerCase()}`;
+    const newSnapshot: NetworkSnapshot = {
+      timestamp: new Date().toISOString(),
+      username: profile.login,
+      followers,
+      following
+    };
+    localStorage.setItem(snapshotKey, JSON.stringify(newSnapshot));
+    setIsBaselineSaved(true);
   };
 
   // --- Ana Analiz Form Submit Fonksiyonu ---
@@ -500,6 +568,8 @@ export default function GithubDashboard(): React.ReactElement {
     else if (activeTab === 'fans') list = fans;
     else if (activeTab === 'mutuals') list = mutuals;
     else if (activeTab === 'following') list = following;
+    else if (activeTab === 'snapshot_lost') list = snapshotDiff?.lostFollowers || [];
+    else if (activeTab === 'snapshot_gained') list = snapshotDiff?.newFollowers || [];
 
     if (searchFilter.trim()) {
       const q = searchFilter.toLowerCase().trim();
@@ -511,7 +581,7 @@ export default function GithubDashboard(): React.ReactElement {
       const nameB = b.login.toLowerCase();
       return sortOrder === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
     });
-  }, [activeTab, unfollowers, fans, mutuals, following, searchFilter, sortOrder]);
+  }, [activeTab, unfollowers, fans, mutuals, following, snapshotDiff, searchFilter, sortOrder]);
 
   const handleCopyUsername = (userLogin: string): void => {
     navigator.clipboard.writeText(userLogin);
@@ -551,12 +621,14 @@ export default function GithubDashboard(): React.ReactElement {
       avatar_url: u.avatar_url
     }));
 
+    const filename = `whodisgit-${activeTab}-${profile?.login || 'export'}`;
+
     if (format === 'json') {
       const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `whodisgit-${activeTab}-${profile?.login || 'export'}.json`;
+      a.download = `${filename}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } else if (format === 'csv') {
@@ -568,7 +640,28 @@ export default function GithubDashboard(): React.ReactElement {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `whodisgit-${activeTab}-${profile?.login || 'export'}.csv`;
+      a.download = `${filename}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (format === 'md') {
+      const header = '| Username | Profile URL | Avatar URL |\n| :--- | :--- | :--- |\n';
+      const rows = dataToExport
+        .map((u) => `| ${u.username} | [${u.profile_url}](${u.profile_url}) | ![${u.username}](${u.avatar_url}) |`)
+        .join('\n');
+      const blob = new Blob([header + rows], { type: 'text/markdown;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (format === 'ndjson') {
+      const lines = dataToExport.map((u) => JSON.stringify(u)).join('\n');
+      const blob = new Blob([lines + '\n'], { type: 'application/x-ndjson;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.ndjson`;
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -863,15 +956,27 @@ export default function GithubDashboard(): React.ReactElement {
 
       {/* ==================== HATA BİLDİRİM KUTUSU ==================== */}
       {error && (
-        <section className="bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 rounded-xl p-4 flex items-start gap-3.5 text-rose-800 dark:text-rose-300">
-          <div className="p-1.5 bg-rose-100 dark:bg-rose-900/40 rounded-md text-rose-600 dark:text-rose-400 shrink-0">
-            {error.code === 403 ? <ShieldAlert className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
-          </div>
-          <div className="space-y-0.5">
-            <h3 className="font-semibold text-sm text-rose-900 dark:text-rose-200">{error.title}</h3>
-            <p className="text-xs text-rose-700 dark:text-rose-300/90 leading-relaxed">{error.message}</p>
-          </div>
-        </section>
+        error.code === 403 && error.rateLimitReset ? (
+          <RateLimitBanner
+            resetTimestamp={error.rateLimitReset}
+            onRetry={() => runAnalysis(username, pat)}
+            onApplyPat={(newPat) => {
+              setPat(newPat);
+              runAnalysis(username, newPat);
+            }}
+            t={t}
+          />
+        ) : (
+          <section className="bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 rounded-xl p-4 flex items-start gap-3.5 text-rose-800 dark:text-rose-300">
+            <div className="p-1.5 bg-rose-100 dark:bg-rose-900/40 rounded-md text-rose-600 dark:text-rose-400 shrink-0">
+              {error.code === 403 ? <ShieldAlert className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
+            </div>
+            <div className="space-y-0.5">
+              <h3 className="font-semibold text-sm text-rose-900 dark:text-rose-200">{error.title}</h3>
+              <p className="text-xs text-rose-700 dark:text-rose-300/90 leading-relaxed">{error.message}</p>
+            </div>
+          </section>
+        )
       )}
 
       {/* ==================== SONUÇ KARTLARI VE EKRAN ==================== */}
@@ -1207,6 +1312,22 @@ export default function GithubDashboard(): React.ReactElement {
             )}
           </section>
 
+          {/* SNAPSHOT COMPARISON BANNER */}
+          {snapshotDiff && (
+            <SnapshotDiffBanner
+              diff={snapshotDiff}
+              activeTab={activeTab}
+              onSelectTab={(tab) => {
+                setActiveTab(tab);
+                setIsNetworkOpen(true);
+                document.getElementById('network-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              onSaveBaseline={handleSaveBaselineSnapshot}
+              isBaselineSaved={isBaselineSaved}
+              t={t}
+            />
+          )}
+
           {/* 2. ETKİLEŞİMLİ LİSTE VE SEKMELER (TABS & LIST) */}
           <section id="network-section" className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6 shadow-sm space-y-5">
             
@@ -1241,6 +1362,10 @@ export default function GithubDashboard(): React.ReactElement {
                         ? fans.length
                         : activeTab === 'mutuals'
                         ? mutuals.length
+                        : activeTab === 'snapshot_lost'
+                        ? snapshotDiff?.lostFollowers.length || 0
+                        : activeTab === 'snapshot_gained'
+                        ? snapshotDiff?.newFollowers.length || 0
                         : following.length}
                     </span>
                   </div>
@@ -1339,6 +1464,48 @@ export default function GithubDashboard(): React.ReactElement {
                   {following.length}
                 </span>
               </button>
+
+                  {snapshotDiff && (snapshotDiff.lostFollowers.length > 0 || activeTab === 'snapshot_lost') && (
+                    <button
+                      onClick={() => setActiveTab('snapshot_lost')}
+                      className={`px-3.5 py-2 rounded-lg font-medium text-xs transition-colors shrink-0 flex items-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500 ${
+                        activeTab === 'snapshot_lost'
+                          ? 'bg-rose-600 text-white font-semibold'
+                          : 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+                      }`}
+                    >
+                      <UserX className="w-3.5 h-3.5" />
+                      <span>{t.snapshotTabLost}</span>
+                      <span className={`px-1.5 py-0.2 text-[10px] font-mono rounded ${
+                        activeTab === 'snapshot_lost'
+                          ? 'bg-white/20 text-white'
+                          : 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300'
+                      }`}>
+                        {snapshotDiff.lostFollowers.length}
+                      </span>
+                    </button>
+                  )}
+
+                  {snapshotDiff && (snapshotDiff.newFollowers.length > 0 || activeTab === 'snapshot_gained') && (
+                    <button
+                      onClick={() => setActiveTab('snapshot_gained')}
+                      className={`px-3.5 py-2 rounded-lg font-medium text-xs transition-colors shrink-0 flex items-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 ${
+                        activeTab === 'snapshot_gained'
+                          ? 'bg-emerald-600 text-white font-semibold'
+                          : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+                      }`}
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>{t.snapshotTabGained}</span>
+                      <span className={`px-1.5 py-0.2 text-[10px] font-mono rounded ${
+                        activeTab === 'snapshot_gained'
+                          ? 'bg-white/20 text-white'
+                          : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
+                      }`}>
+                        {snapshotDiff.newFollowers.length}
+                      </span>
+                    </button>
+                  )}
             </div>
 
             {/* Arama, Sıralama ve Dışa Aktar Kontrol Çubuğu */}
@@ -1359,7 +1526,7 @@ export default function GithubDashboard(): React.ReactElement {
               </div>
 
               {/* Sıralama ve Aktarma Butonları */}
-              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap sm:flex-nowrap">
                 <button
                   onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
                   className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
@@ -1369,24 +1536,42 @@ export default function GithubDashboard(): React.ReactElement {
                   <span>{sortOrder === 'asc' ? t.sortAsc : t.sortDesc}</span>
                 </button>
 
-                <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-800 pl-2">
+                <div className="flex items-center gap-1 border-l border-slate-200 dark:border-slate-800 pl-2">
                   <button
                     onClick={() => exportData('csv')}
                     disabled={currentList.length === 0}
-                    className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
-                    title="CSV olarak indir"
+                    className="px-2 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1 transition-colors cursor-pointer"
+                    title="CSV"
                   >
                     <Download className="w-3 h-3 text-slate-500" />
-                    <span>{t.exportCsv}</span>
+                    <span>CSV</span>
                   </button>
                   <button
                     onClick={() => exportData('json')}
                     disabled={currentList.length === 0}
-                    className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
-                    title="JSON olarak indir"
+                    className="px-2 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1 transition-colors cursor-pointer"
+                    title="JSON"
                   >
                     <Download className="w-3 h-3 text-slate-500" />
-                    <span>{t.exportJson}</span>
+                    <span>JSON</span>
+                  </button>
+                  <button
+                    onClick={() => exportData('md')}
+                    disabled={currentList.length === 0}
+                    className="px-2 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1 transition-colors cursor-pointer"
+                    title="Markdown (.md)"
+                  >
+                    <Download className="w-3 h-3 text-slate-500" />
+                    <span>MD</span>
+                  </button>
+                  <button
+                    onClick={() => exportData('ndjson')}
+                    disabled={currentList.length === 0}
+                    className="px-2 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1 transition-colors cursor-pointer"
+                    title="NDJSON (.ndjson)"
+                  >
+                    <Download className="w-3 h-3 text-slate-500" />
+                    <span>NDJSON</span>
                   </button>
                 </div>
               </div>

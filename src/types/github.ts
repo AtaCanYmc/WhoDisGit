@@ -39,6 +39,7 @@ export interface GithubRepo {
   forks_count?: number;
   language?: string | null;
   fork?: boolean;
+  created_at?: string;
   updated_at?: string;
 }
 
@@ -48,9 +49,25 @@ export interface ApiError {
   code: number;
   title: string;
   message: string;
+  rateLimitReset?: number; // Unix timestamp in seconds
 }
 
-export type ActiveTab = 'unfollowers' | 'fans' | 'mutuals' | 'following';
+export type ActiveTab = 'unfollowers' | 'fans' | 'mutuals' | 'following' | 'snapshot_lost' | 'snapshot_gained';
 export type SortOrder = 'asc' | 'desc';
-export type ExportFormat = 'csv' | 'json';
+export type ExportFormat = 'csv' | 'json' | 'md' | 'ndjson';
 export type ThemeMode = 'dark' | 'light';
+
+export interface NetworkSnapshot {
+  timestamp: string; // ISO string
+  username: string;
+  followers: GithubSimpleUser[];
+  following: GithubSimpleUser[];
+}
+
+export interface SnapshotDiff {
+  previousTimestamp: string;
+  newFollowers: GithubSimpleUser[];
+  lostFollowers: GithubSimpleUser[];
+  newFollowing: GithubSimpleUser[];
+  lostFollowing: GithubSimpleUser[];
+}

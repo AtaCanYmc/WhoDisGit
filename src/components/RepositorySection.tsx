@@ -10,7 +10,7 @@ import {
   ChevronDown,
   Download
 } from 'lucide-react';
-import type { GithubRepo, RepoSortOption, Language } from '../types/github';
+import type { GithubRepo, RepoSortOption, Language, ExportFormat } from '../types/github';
 import { translations } from '../i18n/translations';
 
 interface RepositorySectionProps {
@@ -63,6 +63,22 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
 
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [sortBy, setSortBy] = useState<RepoSortOption>('stars');
+  const [minStars, setMinStars] = useState<number>(0);
+  const [createdYear, setCreatedYear] = useState<string>('all');
+
+  const availableYears = useMemo(() => {
+    const years = new Set<string>();
+    repos.forEach((r) => {
+      const dateStr = r.created_at || r.updated_at;
+      if (dateStr) {
+        const year = new Date(dateStr).getFullYear();
+        if (!isNaN(year)) {
+          years.add(year.toString());
+        }
+      }
+    });
+    return Array.from(years).sort((a, b) => b.localeCompare(a));
+  }, [repos]);
 
   // Filter & Sort
   const filteredAndSortedRepos = useMemo(() => {
@@ -75,6 +91,18 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
           r.name.toLowerCase().includes(q) ||
           (r.description && r.description.toLowerCase().includes(q))
       );
+    }
+
+    if (minStars > 0) {
+      list = list.filter((r) => (r.stargazers_count || 0) >= minStars);
+    }
+
+    if (createdYear !== 'all') {
+      list = list.filter((r) => {
+        const dateStr = r.created_at || r.updated_at;
+        if (!dateStr) return false;
+        return new Date(dateStr).getFullYear().toString() === createdYear;
+      });
     }
 
     return list.toSorted((a, b) => {
@@ -92,7 +120,7 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
       }
       return 0;
     });
-  }, [repos, searchFilter, sortBy]);
+  }, [repos, searchFilter, minStars, createdYear, sortBy]);
 
   // Neutralize CSV formula injection (CWE-1236) and escape double quotes
   const sanitizeCsvCell = (value: unknown): string => {
@@ -104,7 +132,7 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
     return `"${str.replace(/"/g, '""')}"`;
   };
 
-  const exportRepos = (format: 'csv' | 'json'): void => {
+  const exportRepos = (format: ExportFormat): void => {
     if (filteredAndSortedRepos.length === 0) return;
 
     if (format === 'json') {
@@ -117,6 +145,7 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
         stars: r.stargazers_count,
         forks: r.forks_count,
         is_fork: r.fork,
+        created_at: r.created_at,
         updated_at: r.updated_at
       }));
       const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
@@ -127,7 +156,7 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
       a.click();
       URL.revokeObjectURL(url);
     } else if (format === 'csv') {
-      const header = 'Name,Full Name,Description,Language,Stars,Forks,Is Fork,URL,Updated At\n';
+      const header = 'Name,Full Name,Description,Language,Stars,Forks,Is Fork,URL,Created At,Updated At\n';
       const rows = filteredAndSortedRepos
         .map((r) => {
           const name = sanitizeCsvCell(r.name);
@@ -138,8 +167,9 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
           const forks = r.forks_count || 0;
           const isFork = Boolean(r.fork);
           const url = sanitizeCsvCell(r.html_url);
+          const created = sanitizeCsvCell(r.created_at || '');
           const updated = sanitizeCsvCell(r.updated_at || '');
-          return `${name},${fullName},${desc},${lang},${stars},${forks},${isFork},${url},${updated}`;
+          return `${name},${fullName},${desc},${lang},${stars},${forks},${isFork},${url},${created},${updated}`;
         })
         .join('\n');
       const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
@@ -147,6 +177,54 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
       const a = document.createElement('a');
       a.href = url;
       a.download = `whodisgit-repos-${username || 'export'}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (format === 'md') {
+      const sanitizeMdCell = (text: string | null | undefined): string => {
+        if (!text) return '-';
+        return text.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
+      };
+      const header = '| Name | Description | Language | Stars | Forks | URL |\n| :--- | :--- | :--- | :---: | :---: | :--- |\n';
+      const rows = filteredAndSortedRepos
+        .map((r) => {
+          const name = sanitizeMdCell(r.name);
+          const desc = sanitizeMdCell(r.description);
+          const lang = sanitizeMdCell(r.language);
+          const stars = r.stargazers_count || 0;
+          const forks = r.forks_count || 0;
+          const url = sanitizeMdCell(r.html_url);
+          return `| ${name} | ${desc} | ${lang} | ${stars} | ${forks} | ${url} |`;
+        })
+        .join('\n');
+      const blob = new Blob([header + rows], { type: 'text/markdown;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `whodisgit-repos-${username || 'export'}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (format === 'ndjson') {
+      const lines = filteredAndSortedRepos
+        .map((r) =>
+          JSON.stringify({
+            name: r.name,
+            full_name: r.full_name,
+            description: r.description,
+            html_url: r.html_url,
+            language: r.language,
+            stars: r.stargazers_count,
+            forks: r.forks_count,
+            is_fork: r.fork,
+            created_at: r.created_at,
+            updated_at: r.updated_at
+          })
+        )
+        .join('\n');
+      const blob = new Blob([lines + '\n'], { type: 'application/x-ndjson;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `whodisgit-repos-${username || 'export'}.ndjson`;
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -205,24 +283,64 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
       {/* Collapsible Body */}
       {isExpanded && (
         <div className="space-y-5 pt-3 border-t border-slate-100 dark:border-slate-800">
-          {/* Search & Sort Controls */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            {/* Search Input */}
-            <div className="relative w-full sm:w-60">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <Search className="w-3.5 h-3.5" />
+          {/* Search, Filter & Sort Controls */}
+          <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3">
+            {/* Left: Search & Filter Dropdowns */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+              {/* Search Input */}
+              <div className="relative w-full sm:w-56">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <Search className="w-3.5 h-3.5" />
+                </div>
+                <input
+                  type="text"
+                  placeholder={t.repoSearchPlaceholder}
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 text-xs placeholder-slate-400 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 transition-colors"
+                />
               </div>
-              <input
-                type="text"
-                placeholder={t.repoSearchPlaceholder}
-                value={searchFilter}
-                onChange={(e) => setSearchFilter(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 text-xs placeholder-slate-400 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 transition-colors"
-              />
+
+              {/* Filter Dropdowns (Min Stars & Creation Year) */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                  <select
+                    value={minStars}
+                    onChange={(e) => setMinStars(Number(e.target.value))}
+                    aria-label={t.minStarsFilterLabel}
+                    className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 transition-colors cursor-pointer"
+                  >
+                    <option value={0}>{t.allStarsOption}</option>
+                    <option value={1}>1+ ★</option>
+                    <option value={5}>5+ ★</option>
+                    <option value={10}>10+ ★</option>
+                    <option value={50}>50+ ★</option>
+                    <option value={100}>100+ ★</option>
+                  </select>
+                </div>
+
+                {availableYears.length > 0 && (
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                    <select
+                      value={createdYear}
+                      onChange={(e) => setCreatedYear(e.target.value)}
+                      aria-label={t.createdAfterFilterLabel}
+                      className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 transition-colors cursor-pointer"
+                    >
+                      <option value="all">{t.allDatesOption}</option>
+                      {availableYears.map((yr) => (
+                        <option key={yr} value={yr}>
+                          {yr}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Actions: Sort & Export */}
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap sm:flex-nowrap">
+            {/* Right Actions: Sort & Export */}
+            <div className="flex items-center gap-2 w-full xl:w-auto justify-end flex-wrap sm:flex-nowrap">
               {/* Sort Selector Segmented */}
               <div className="flex items-center rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-0.5 text-xs font-medium">
                 <button
@@ -282,27 +400,47 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
                 </button>
               </div>
 
-              {/* Dışa Aktarma Butonları (CSV & JSON) */}
-              <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-800 pl-2">
+              {/* Dışa Aktarma Butonları (CSV, JSON, MD, NDJSON) */}
+              <div className="flex items-center gap-1 border-l border-slate-200 dark:border-slate-800 pl-2">
                 <button
                   type="button"
                   onClick={() => exportRepos('csv')}
                   disabled={filteredAndSortedRepos.length === 0}
-                  className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
-                  title="CSV olarak indir"
+                  className="px-2 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1 transition-colors cursor-pointer"
+                  title="CSV"
                 >
                   <Download className="w-3 h-3 text-slate-500" />
-                  <span>{t.exportCsv}</span>
+                  <span>CSV</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => exportRepos('json')}
                   disabled={filteredAndSortedRepos.length === 0}
-                  className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
-                  title="JSON olarak indir"
+                  className="px-2 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1 transition-colors cursor-pointer"
+                  title="JSON"
                 >
                   <Download className="w-3 h-3 text-slate-500" />
-                  <span>{t.exportJson}</span>
+                  <span>JSON</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => exportRepos('md')}
+                  disabled={filteredAndSortedRepos.length === 0}
+                  className="px-2 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1 transition-colors cursor-pointer"
+                  title="Markdown (.md)"
+                >
+                  <Download className="w-3 h-3 text-slate-500" />
+                  <span>MD</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => exportRepos('ndjson')}
+                  disabled={filteredAndSortedRepos.length === 0}
+                  className="px-2 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-xs font-medium inline-flex items-center gap-1 transition-colors cursor-pointer"
+                  title="NDJSON (.ndjson)"
+                >
+                  <Download className="w-3 h-3 text-slate-500" />
+                  <span>NDJSON</span>
                 </button>
               </div>
             </div>
@@ -320,13 +458,17 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
           <p className="text-slate-500 text-xs max-w-sm mx-auto">
             {t.noReposMsg}
           </p>
-          {searchFilter && (
+          {(searchFilter || minStars > 0 || createdYear !== 'all') && (
             <button
               type="button"
-              onClick={() => setSearchFilter('')}
+              onClick={() => {
+                setSearchFilter('');
+                setMinStars(0);
+                setCreatedYear('all');
+              }}
               className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline pt-1 cursor-pointer"
             >
-              Temizle / Clear
+              Temizle / Clear Filters
             </button>
           )}
         </div>

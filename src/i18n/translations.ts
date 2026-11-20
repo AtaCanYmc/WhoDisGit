@@ -111,6 +111,35 @@ export interface TranslationSchema {
   metricPrimaryLang: string;
   metricMemberSince: string;
   metricSources: string;
+
+  // Rate Limit Live Countdown Banner
+  rateLimitCountdownTitle: string;
+  rateLimitCountdownDesc: (remaining: string) => string;
+  rateLimitRetryBtn: string;
+  rateLimitPatPrompt: string;
+  rateLimitApplyPat: string;
+  rateLimitResetReady: string;
+
+  // Snapshot Comparison
+  snapshotDiffTitle: string;
+  snapshotComparedWith: (date: string) => string;
+  snapshotNewFollowersCount: (count: number) => string;
+  snapshotLostFollowersCount: (count: number) => string;
+  snapshotUnchanged: string;
+  snapshotTabLost: string;
+  snapshotTabGained: string;
+  snapshotSaveBaseline: string;
+  snapshotBaselineSaved: string;
+
+  // Additional Export Formats
+  exportMd: string;
+  exportNdjson: string;
+
+  // Repository Filtering
+  minStarsFilterLabel: string;
+  createdAfterFilterLabel: string;
+  allStarsOption: string;
+  allDatesOption: string;
 }
 
 export const translations: Record<Language, TranslationSchema> = {
@@ -216,7 +245,29 @@ export const translations: Record<Language, TranslationSchema> = {
     metricTotalForks: 'Alınan Forklar',
     metricPrimaryLang: 'Baskın Dil',
     metricMemberSince: 'Katılma Tarihi',
-    metricSources: 'Kaynak / Özgün'
+    metricSources: 'Kaynak / Özgün',
+
+    rateLimitCountdownTitle: 'GitHub API İstek Limiti Doldu',
+    rateLimitCountdownDesc: (remaining) => `Kota sıfırlanmasına kalan süre: ${remaining}.`,
+    rateLimitRetryBtn: 'Yeniden Dene',
+    rateLimitPatPrompt: 'Beklemek istemiyor musunuz? Kişisel Erişim Tokeni (PAT) girerek 5.000 istek/saat kotasına hemen geçin:',
+    rateLimitApplyPat: 'Uygula ve Başlat',
+    rateLimitResetReady: 'İstek kotanız sıfırlandı! Analizi tekrar başlatabilirsiniz.',
+    snapshotDiffTitle: 'Oturumlar Arası Takipçi Değişimi',
+    snapshotComparedWith: (date) => `Önceki tarama ile karşılaştırıldı (${date}):`,
+    snapshotNewFollowersCount: (count) => `+${count} Yeni Takipçi`,
+    snapshotLostFollowersCount: (count) => `-${count} Takipten Çıkan`,
+    snapshotUnchanged: 'Önceki taramadan bu yana takipçi ağınızda değişiklik tespit edilmedi.',
+    snapshotTabLost: 'Takipten Çıkanlar (Son Taramadan Beri)',
+    snapshotTabGained: 'Yeni Takipçiler (Son Taramadan Beri)',
+    snapshotSaveBaseline: 'Temel Anlık Görüntüyü Güncelle',
+    snapshotBaselineSaved: 'Anlık görüntü başarıyla kaydedildi!',
+    exportMd: 'Markdown (.md)',
+    exportNdjson: 'NDJSON (.ndjson)',
+    minStarsFilterLabel: 'Min. Yıldız:',
+    createdAfterFilterLabel: 'Oluşturulma Tarihi:',
+    allStarsOption: 'Tüm Yıldızlar',
+    allDatesOption: 'Tüm Zamanlar'
   },
   en: {
     heroBadge: 'GitHub Unfollowers & Profile Analytics',
@@ -320,7 +371,29 @@ export const translations: Record<Language, TranslationSchema> = {
     metricTotalForks: 'Total Forks',
     metricPrimaryLang: 'Primary Language',
     metricMemberSince: 'Member Since',
-    metricSources: 'Source Repos'
+    metricSources: 'Source Repos',
+
+    rateLimitCountdownTitle: 'GitHub API Rate Limit Exhausted',
+    rateLimitCountdownDesc: (remaining) => `Quota resets in: ${remaining}.`,
+    rateLimitRetryBtn: 'Retry Now',
+    rateLimitPatPrompt: 'Do not want to wait? Supply a Personal Access Token (PAT) for 5,000 requests/hour right now:',
+    rateLimitApplyPat: 'Apply & Run',
+    rateLimitResetReady: 'Your API quota has reset! You can rerun the analysis now.',
+    snapshotDiffTitle: 'Cross-Session Follower Network Changes',
+    snapshotComparedWith: (date) => `Compared with previous session (${date}):`,
+    snapshotNewFollowersCount: (count) => `+${count} New Followers`,
+    snapshotLostFollowersCount: (count) => `-${count} Lost Followers`,
+    snapshotUnchanged: 'No follower changes detected since your last session.',
+    snapshotTabLost: 'Unfollowed You (Since Last Scan)',
+    snapshotTabGained: 'New Followers (Since Last Scan)',
+    snapshotSaveBaseline: 'Update Baseline Snapshot',
+    snapshotBaselineSaved: 'Snapshot saved successfully!',
+    exportMd: 'Markdown (.md)',
+    exportNdjson: 'NDJSON (.ndjson)',
+    minStarsFilterLabel: 'Min. Stars:',
+    createdAfterFilterLabel: 'Creation Date:',
+    allStarsOption: 'All Stars',
+    allDatesOption: 'All Time'
   },
   es: {
     heroBadge: 'No Seguidores y Analizador de Perfil de GitHub',
@@ -424,7 +497,29 @@ export const translations: Record<Language, TranslationSchema> = {
     metricTotalForks: 'Total Bifurcaciones',
     metricPrimaryLang: 'Lenguaje Principal',
     metricMemberSince: 'Miembro Desde',
-    metricSources: 'Repositorios Fuente'
+    metricSources: 'Repositorios Fuente',
+
+    rateLimitCountdownTitle: 'Límite de solicitudes de la API de GitHub agotado',
+    rateLimitCountdownDesc: (remaining) => `Tiempo restante para restablecer la cuota: ${remaining}.`,
+    rateLimitRetryBtn: 'Reintentar ahora',
+    rateLimitPatPrompt: '¿No quieres esperar? Proporciona un token de acceso personal (PAT) para 5.000 solicitudes/hora:',
+    rateLimitApplyPat: 'Aplicar e iniciar',
+    rateLimitResetReady: '¡Tu cuota de API se ha restablecido! Puedes volver a ejecutar el análisis.',
+    snapshotDiffTitle: 'Cambios en la red entre sesiones',
+    snapshotComparedWith: (date) => `Comparado con la sesión anterior (${date}):`,
+    snapshotNewFollowersCount: (count) => `+${count} Nuevos seguidores`,
+    snapshotLostFollowersCount: (count) => `-${count} Dejaron de seguir`,
+    snapshotUnchanged: 'No se detectaron cambios en tus seguidores desde la última sesión.',
+    snapshotTabLost: 'Dejaron de seguirte (desde último escaneo)',
+    snapshotTabGained: 'Nuevos seguidores (desde último escaneo)',
+    snapshotSaveBaseline: 'Actualizar instantánea base',
+    snapshotBaselineSaved: '¡Instantánea guardada con éxito!',
+    exportMd: 'Markdown (.md)',
+    exportNdjson: 'NDJSON (.ndjson)',
+    minStarsFilterLabel: 'Estrellas mín.:',
+    createdAfterFilterLabel: 'Fecha de creación:',
+    allStarsOption: 'Todas las estrellas',
+    allDatesOption: 'Todo el tiempo'
   },
   de: {
     heroBadge: 'GitHub Entfolger & Profil-Analytics',
@@ -528,7 +623,29 @@ export const translations: Record<Language, TranslationSchema> = {
     metricTotalForks: 'Gesamt-Forks',
     metricPrimaryLang: 'Hauptsprache',
     metricMemberSince: 'Mitglied seit',
-    metricSources: 'Quell-Repos'
+    metricSources: 'Quell-Repos',
+
+    rateLimitCountdownTitle: 'GitHub-API-Ratenlimit erschöpft',
+    rateLimitCountdownDesc: (remaining) => `Verbleibende Zeit bis zum Zurücksetzen des Kontingents: ${remaining}.`,
+    rateLimitRetryBtn: 'Jetzt wiederholen',
+    rateLimitPatPrompt: 'Keine Lust zu warten? Geben Sie ein Personal Access Token (PAT) für 5.000 Anfragen/Stunde ein:',
+    rateLimitApplyPat: 'Anwenden & Starten',
+    rateLimitResetReady: 'Ihr API-Kontingent wurde zurückgesetzt! Sie können die Analyse jetzt erneut ausführen.',
+    snapshotDiffTitle: 'Sitzungsübergreifende Follower-Änderungen',
+    snapshotComparedWith: (date) => `Verglichen mit der vorherigen Sitzung (${date}):`,
+    snapshotNewFollowersCount: (count) => `+${count} Neue Follower`,
+    snapshotLostFollowersCount: (count) => `-${count} Verlorene Follower`,
+    snapshotUnchanged: 'Keine Änderungen an Ihren Followern seit der letzten Sitzung festgestellt.',
+    snapshotTabLost: 'Entfolgt (seit letztem Scan)',
+    snapshotTabGained: 'Neue Follower (seit letztem Scan)',
+    snapshotSaveBaseline: 'Basis-Schnappschuss aktualisieren',
+    snapshotBaselineSaved: 'Schnappschuss erfolgreich gespeichert!',
+    exportMd: 'Markdown (.md)',
+    exportNdjson: 'NDJSON (.ndjson)',
+    minStarsFilterLabel: 'Min. Sterne:',
+    createdAfterFilterLabel: 'Erstellungsdatum:',
+    allStarsOption: 'Alle Sterne',
+    allDatesOption: 'Gesamte Zeit'
   },
   fr: {
     heroBadge: 'Désabonnements & Analyse de Profil GitHub',
@@ -632,6 +749,28 @@ export const translations: Record<Language, TranslationSchema> = {
     metricTotalForks: 'Total Forks',
     metricPrimaryLang: 'Langage Principal',
     metricMemberSince: 'Membre depuis',
-    metricSources: 'Dépôts Sources'
+    metricSources: 'Dépôts Sources',
+
+    rateLimitCountdownTitle: 'Limite de requêtes API GitHub atteinte',
+    rateLimitCountdownDesc: (remaining) => `Temps restant avant réinitialisation: ${remaining}.`,
+    rateLimitRetryBtn: 'Réessayer maintenant',
+    rateLimitPatPrompt: 'Vous ne voulez pas attendre ? Fournissez un jeton d’accès personnel (PAT) pour 5 000 requêtes/heure :',
+    rateLimitApplyPat: 'Appliquer et lancer',
+    rateLimitResetReady: 'Votre quota API a été réinitialisé ! Vous pouvez relancer l’analyse.',
+    snapshotDiffTitle: 'Évolution du réseau entre sessions',
+    snapshotComparedWith: (date) => `Comparé avec la session précédente (${date}) :`,
+    snapshotNewFollowersCount: (count) => `+${count} Nouveaux abonnés`,
+    snapshotLostFollowersCount: (count) => `-${count} Désabonnements`,
+    snapshotUnchanged: 'Aucun changement détecté dans votre réseau depuis votre dernière session.',
+    snapshotTabLost: 'Désabonnés (depuis le dernier scan)',
+    snapshotTabGained: 'Nouveaux abonnés (depuis le dernier scan)',
+    snapshotSaveBaseline: 'Mettre à jour la capture de référence',
+    snapshotBaselineSaved: 'Capture enregistrée avec succès !',
+    exportMd: 'Markdown (.md)',
+    exportNdjson: 'NDJSON (.ndjson)',
+    minStarsFilterLabel: 'Étoiles min. :',
+    createdAfterFilterLabel: 'Date de création :',
+    allStarsOption: 'Toutes les étoiles',
+    allDatesOption: 'Toutes dates'
   }
 };
