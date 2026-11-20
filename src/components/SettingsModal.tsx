@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { X, Sun, Moon, Check } from 'lucide-react';
 import type { ThemeMode, Language } from '../types/github';
 import { translations } from '../i18n/translations';
+import { APP_VERSION } from '../version';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -50,12 +51,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         {/* Modal Header */}
         <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <h3
-              id="settings-modal-title"
-              className="text-base font-semibold text-slate-900 dark:text-slate-100"
-            >
-              {t.settingsTitle}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3
+                id="settings-modal-title"
+                className="text-base font-semibold text-slate-900 dark:text-slate-100"
+              >
+                {t.settingsTitle}
+              </h3>
+              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                v{APP_VERSION}
+              </span>
+            </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {t.settingsDesc}
             </p>

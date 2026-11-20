@@ -65,6 +65,7 @@ import type {
 } from '../types/github';
 
 import { translations } from '../i18n/translations';
+import { APP_VERSION } from '../version';
 import SettingsModal from './SettingsModal';
 import RepositorySection from './RepositorySection';
 import { RateLimitBanner } from './RateLimitBanner';
@@ -1661,7 +1662,7 @@ export default function GithubDashboard(): React.ReactElement {
 
       {/* ==================== FOOTER ALANI ==================== */}
       <footer className="text-center py-6 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 space-y-1">
-        <p>WhoDisGit &copy; {new Date().getFullYear()} — {t.footerRights}</p>
+        <p>WhoDisGit <span className="font-mono font-semibold text-slate-400 dark:text-slate-500">v{APP_VERSION}</span> &copy; {new Date().getFullYear()} — {t.footerRights}</p>
         <p className="text-[11px] text-slate-400 dark:text-slate-500">
           {t.footerPrivacy}
         </p>

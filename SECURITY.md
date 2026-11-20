@@ -6,7 +6,7 @@ Security updates are applied only to the latest release branch.
 
 | Version | Supported | Notes |
 | :--- | :---: | :--- |
-| 1.0.x | Yes | Active release branch |
+| 1.0.0 | Yes | Active release branch | <!-- x-release-please-version -->
 | < 1.0 | No | Deprecated |
 
 ---

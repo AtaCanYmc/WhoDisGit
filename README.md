@@ -7,6 +7,7 @@
 # WhoDisGit: GitHub Unfollowers and Profile Analytics Dashboard
 
 <div align="center">
+  <a href="https://github.com/AtaCanYmc/WhoDisGit/releases"><img src="https://img.shields.io/badge/version-1.0.0-blue?style=flat" alt="Version 1.0.0" /></a> <!-- x-release-please-version -->
   <a href="https://github.com/AtaCanYmc/WhoDisGit/actions/workflows/ci.yml"><img src="https://github.com/AtaCanYmc/WhoDisGit/actions/workflows/ci.yml/badge.svg" alt="CI Status" /></a>
   <img src="https://img.shields.io/badge/React-18.3-61DAFB?style=flat&logo=react&logoColor=black" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-5.5-3178C6?style=flat&logo=typescript&logoColor=white" alt="TypeScript" />

@@ -1,6 +1,7 @@
 {
   "name": "WhoDisGit — GitHub Unfollowers & Profile Analytics",
   "short_name": "WhoDisGit",
+  "version": "1.0.0",
   "description": "Audit GitHub unfollowers, analyze profile statistics, and explore public repositories.",
   "start_url": "./",
   "scope": "./",
