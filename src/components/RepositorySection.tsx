@@ -94,6 +94,16 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
     });
   }, [repos, searchFilter, sortBy]);
 
+  // Neutralize CSV formula injection (CWE-1236) and escape double quotes
+  const sanitizeCsvCell = (value: unknown): string => {
+    if (value === null || value === undefined) return '""';
+    let str = String(value);
+    if (/^[=+\-@\t\r]/.test(str)) {
+      str = `'${str}`;
+    }
+    return `"${str.replace(/"/g, '""')}"`;
+  };
+
   const exportRepos = (format: 'csv' | 'json'): void => {
     if (filteredAndSortedRepos.length === 0) return;
 
@@ -120,15 +130,15 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
       const header = 'Name,Full Name,Description,Language,Stars,Forks,Is Fork,URL,Updated At\n';
       const rows = filteredAndSortedRepos
         .map((r) => {
-          const name = `"${r.name.replace(/"/g, '""')}"`;
-          const fullName = `"${(r.full_name || '').replace(/"/g, '""')}"`;
-          const desc = `"${(r.description || '').replace(/"/g, '""')}"`;
-          const lang = `"${(r.language || '').replace(/"/g, '""')}"`;
+          const name = sanitizeCsvCell(r.name);
+          const fullName = sanitizeCsvCell(r.full_name || '');
+          const desc = sanitizeCsvCell(r.description || '');
+          const lang = sanitizeCsvCell(r.language || '');
           const stars = r.stargazers_count || 0;
           const forks = r.forks_count || 0;
           const isFork = Boolean(r.fork);
-          const url = `"${r.html_url}"`;
-          const updated = `"${r.updated_at || ''}"`;
+          const url = sanitizeCsvCell(r.html_url);
+          const updated = sanitizeCsvCell(r.updated_at || '');
           return `${name},${fullName},${desc},${lang},${stars},${forks},${isFork},${url},${updated}`;
         })
         .join('\n');

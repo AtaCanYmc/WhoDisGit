@@ -181,9 +181,23 @@ export default function GithubDashboard(): React.ReactElement {
     if (effectivePat) {
       setPat(effectivePat);
     }
+
+    // URL parametresinde taşınan token'ı tarayıcı geçmişinden ve adres çubuğundan temizle
+    if (urlPat && typeof window !== 'undefined') {
+      try {
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('pat');
+        cleanUrl.searchParams.delete('token');
+        window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+      } catch {}
+    }
+
     if (savedRecent) {
       try {
-        setRecentSearches(JSON.parse(savedRecent) as string[]);
+        const parsed = JSON.parse(savedRecent);
+        if (Array.isArray(parsed)) {
+          setRecentSearches(parsed.filter((item): item is string => typeof item === 'string'));
+        }
       } catch (e) {
         console.error('Geçmiş aramalar yüklenemedi:', e);
       }
@@ -199,8 +213,9 @@ export default function GithubDashboard(): React.ReactElement {
   const getHeaders = (token: string): Record<string, string> => {
     const headers: Record<string, string> = {
       'Accept': 'application/vnd.github.v3+json',
+      'X-GitHub-Api-Version': '2022-11-28',
     };
-    const cleanToken = token ? token.trim() : '';
+    const cleanToken = token ? token.trim().replace(/[\r\n]/g, '') : '';
     if (cleanToken) {
       headers['Authorization'] = cleanToken.startsWith('Bearer ') || cleanToken.startsWith('token ')
         ? cleanToken
@@ -316,7 +331,7 @@ export default function GithubDashboard(): React.ReactElement {
     const headers = getHeaders(targetPat);
 
     try {
-      const userRes = await fetch(`https://api.github.com/users/${cleanUsername}`, { headers });
+      const userRes = await fetch(`https://api.github.com/users/${encodeURIComponent(cleanUsername)}`, { headers });
       
       if (!userRes.ok) {
         if (userRes.status === 404) {
@@ -351,9 +366,9 @@ export default function GithubDashboard(): React.ReactElement {
       setProfile(userData);
 
       const [fetchedFollowers, fetchedFollowing, repoData] = await Promise.all([
-        fetchAllPages(`https://api.github.com/users/${cleanUsername}/followers`, userData.followers, 'followers', headers),
-        fetchAllPages(`https://api.github.com/users/${cleanUsername}/following`, userData.following, 'following', headers),
-        fetchReposAndStars(userData.login, userData.public_repos, headers)
+        fetchAllPages(`https://api.github.com/users/${encodeURIComponent(cleanUsername)}/followers`, userData.followers, 'followers', headers),
+        fetchAllPages(`https://api.github.com/users/${encodeURIComponent(cleanUsername)}/following`, userData.following, 'following', headers),
+        fetchReposAndStars(encodeURIComponent(userData.login), userData.public_repos, headers)
       ]);
 
       setFollowers(fetchedFollowers);
@@ -504,6 +519,31 @@ export default function GithubDashboard(): React.ReactElement {
     setTimeout(() => setCopiedUser(null), 2000);
   };
 
+  // Neutralize CSV formula injection (CWE-1236) and escape double quotes
+  const sanitizeCsvCell = (value: unknown): string => {
+    if (value === null || value === undefined) return '""';
+    let str = String(value);
+    if (/^[=+\-@\t\r]/.test(str)) {
+      str = `'${str}`;
+    }
+    return `"${str.replace(/"/g, '""')}"`;
+  };
+
+  // Ensure external URLs strictly conform to http/https protocols
+  const sanitizeExternalUrl = (rawUrl: string | null | undefined): string => {
+    if (!rawUrl) return '#';
+    try {
+      const formatted = rawUrl.startsWith('http://') || rawUrl.startsWith('https://')
+        ? rawUrl
+        : `https://${rawUrl}`;
+      const parsed = new URL(formatted);
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        return parsed.href;
+      }
+    } catch {}
+    return '#';
+  };
+
   const exportData = (format: ExportFormat): void => {
     const dataToExport = currentList.map((u) => ({
       username: u.login,
@@ -518,15 +558,19 @@ export default function GithubDashboard(): React.ReactElement {
       a.href = url;
       a.download = `whodisgit-${activeTab}-${profile?.login || 'export'}.json`;
       a.click();
+      URL.revokeObjectURL(url);
     } else if (format === 'csv') {
       const header = 'Username,Profile URL,Avatar URL\n';
-      const rows = dataToExport.map((u) => `"${u.username}","${u.profile_url}","${u.avatar_url}"`).join('\n');
+      const rows = dataToExport
+        .map((u) => `${sanitizeCsvCell(u.username)},${sanitizeCsvCell(u.profile_url)},${sanitizeCsvCell(u.avatar_url)}`)
+        .join('\n');
       const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `whodisgit-${activeTab}-${profile?.login || 'export'}.csv`;
       a.click();
+      URL.revokeObjectURL(url);
     }
   };
 
@@ -930,7 +974,7 @@ export default function GithubDashboard(): React.ReactElement {
 
                     {profile.blog && (
                       <a
-                        href={profile.blog.startsWith('http') ? profile.blog : `https://${profile.blog}`}
+                        href={sanitizeExternalUrl(profile.blog)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 truncate max-w-xs transition-colors"
