@@ -40,11 +40,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="settings-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs overscroll-contain animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden p-6 space-y-6"
+        className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden p-6 space-y-6 overscroll-contain"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -62,7 +62,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:focus-visible:outline-slate-100"
             aria-label={t.closeBtn}
           >
             <X className="w-4 h-4" />
@@ -79,7 +79,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <button
               type="button"
               onClick={() => onThemeChange('dark')}
-              className={`p-3 rounded-lg border text-left flex items-center justify-between transition-colors cursor-pointer ${
+              className={`p-3 rounded-lg border text-left flex items-center justify-between transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:focus-visible:outline-slate-100 ${
                 theme === 'dark'
                   ? 'border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium'
                   : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-600 dark:text-slate-400'
@@ -96,7 +96,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <button
               type="button"
               onClick={() => onThemeChange('light')}
-              className={`p-3 rounded-lg border text-left flex items-center justify-between transition-colors cursor-pointer ${
+              className={`p-3 rounded-lg border text-left flex items-center justify-between transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:focus-visible:outline-slate-100 ${
                 theme === 'light'
                   ? 'border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium'
                   : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-600 dark:text-slate-400'
@@ -128,7 +128,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 key={l.code}
                 type="button"
                 onClick={() => onLanguageChange(l.code)}
-                className={`p-2.5 rounded-lg border text-left flex items-center justify-between transition-colors cursor-pointer ${
+                className={`p-2.5 rounded-lg border text-left flex items-center justify-between transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:focus-visible:outline-slate-100 ${
                   lang === l.code
                     ? 'border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium'
                     : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-600 dark:text-slate-400'
@@ -151,7 +151,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-white dark:text-slate-950 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-white dark:text-slate-950 text-xs font-semibold rounded-lg transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:focus-visible:outline-slate-100"
           >
             {t.closeBtn}
           </button>

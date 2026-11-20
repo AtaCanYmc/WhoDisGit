@@ -77,7 +77,7 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
       );
     }
 
-    list.sort((a, b) => {
+    return list.toSorted((a, b) => {
       if (sortBy === 'stars') {
         return (b.stargazers_count || 0) - (a.stargazers_count || 0);
       }
@@ -92,8 +92,6 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
       }
       return 0;
     });
-
-    return list;
   }, [repos, searchFilter, sortBy]);
 
   const exportRepos = (format: 'csv' | 'json'): void => {
@@ -220,7 +218,7 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
                 <button
                   type="button"
                   onClick={() => setSortBy('stars')}
-                  className={`px-2.5 py-1 rounded-md transition-colors inline-flex items-center gap-1 cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md transition-colors inline-flex items-center gap-1 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-slate-900 dark:focus-visible:outline-slate-100 ${
                     sortBy === 'stars'
                       ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-950 font-semibold'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -234,7 +232,7 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
                 <button
                   type="button"
                   onClick={() => setSortBy('forks')}
-                  className={`px-2.5 py-1 rounded-md transition-colors inline-flex items-center gap-1 cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md transition-colors inline-flex items-center gap-1 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-slate-900 dark:focus-visible:outline-slate-100 ${
                     sortBy === 'forks'
                       ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-950 font-semibold'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -248,7 +246,7 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
                 <button
                   type="button"
                   onClick={() => setSortBy('updated')}
-                  className={`px-2.5 py-1 rounded-md transition-colors inline-flex items-center gap-1 cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md transition-colors inline-flex items-center gap-1 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-slate-900 dark:focus-visible:outline-slate-100 ${
                     sortBy === 'updated'
                       ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-950 font-semibold'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -262,7 +260,7 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
                 <button
                   type="button"
                   onClick={() => setSortBy('name')}
-                  className={`px-2.5 py-1 rounded-md transition-colors inline-flex items-center gap-1 cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md transition-colors inline-flex items-center gap-1 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-slate-900 dark:focus-visible:outline-slate-100 ${
                     sortBy === 'name'
                       ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-950 font-semibold'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'

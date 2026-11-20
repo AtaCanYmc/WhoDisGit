@@ -10,6 +10,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="WhoDisGit" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      try {
+        const t = localStorage.getItem('whodisgit_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        if (t === 'dark') document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+        const m = document.querySelector('meta[name="color-scheme"]');
+        if (m) m.content = t;
+      } catch (e) {}
+    </script>
     <title>WhoDisGit - GitHub Takip Etmeyenler Analizi & Dashboard</title>
     <meta name="description" content="GitHub hesabınızda sizi geri takip etmeyen kullanıcıları tespit edin, detaylı profil metriklerinizi görün ve istatistiklerinizi analiz edin." />
     <!-- Google Fonts -->
