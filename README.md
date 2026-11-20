@@ -155,8 +155,8 @@ WhoDisGit supports URL query parameters for automated query workflows and headle
 
 | Parameter | Type | Default | Description |
 | :--- | :--- | :---: | :--- |
-| `username` | String | — | GitHub login handle to query automatically upon mounting. |
-| `pat` | String | — | Personal Access Token to apply for GitHub API authorization headers. |
+| `username` | String | None | GitHub login handle to query automatically upon mounting. |
+| `pat` | String | None | Personal Access Token to apply for GitHub API authorization headers. |
 | `raw` | Integer (`0` or `1`) | `0` | Setting to `1` renders raw API JSON payload with a one-click copy button. |
 
 ### Example
