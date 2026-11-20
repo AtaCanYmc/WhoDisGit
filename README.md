@@ -33,6 +33,7 @@
   - [Automated Deployment (GitHub Actions)](#automated-deployment-github-actions)
   - [Manual Deployment](#manual-deployment)
 - [Frequently Asked Questions](#frequently-asked-questions)
+- [Technical Documentation](#technical-documentation)
 - [Governance and Policies](#governance-and-policies)
 - [License](#license)
 
@@ -201,6 +202,18 @@ No. WhoDisGit is strictly read-only. Modifying follow relationships requires the
 
 #### What happens when rate limits are exceeded?
 When GitHub returns an HTTP 403 response indicating rate limit exhaustion, the interface displays an error banner noting the reset time extracted from the `x-ratelimit-reset` response header. Providing a Personal Access Token resolves the rate limit immediately.
+
+---
+
+## Technical Documentation
+
+Detailed subsystem documentation is maintained in the [`docs/`](docs/README.md) directory:
+
+- [Documentation Index](docs/README.md): Architecture overview and technical document catalog.
+- [Architecture Specification](docs/ARCHITECTURE.md): Client-side execution model and $O(1)$ set-difference matching algorithms.
+- [GitHub API Integration](docs/API_INTEGRATION.md): REST API v3 endpoints, headers, and rate-limit governance.
+- [Theming and Internationalization](docs/THEMING_AND_I18N.md): Tailwind CSS v4 custom variants and multilingual dictionary architecture.
+- [Deployment and CI/CD Pipeline](docs/DEPLOYMENT.md): Two-stage GitHub Pages workflow and asset resolution.
 
 ---
 
