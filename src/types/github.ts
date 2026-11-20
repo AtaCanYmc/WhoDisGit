@@ -39,6 +39,7 @@ export interface GithubRepo {
   forks_count?: number;
   language?: string | null;
   fork?: boolean;
+  archived?: boolean;
   created_at?: string;
   updated_at?: string;
 }

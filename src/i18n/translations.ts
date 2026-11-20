@@ -100,6 +100,7 @@ export interface TranslationSchema {
   noReposTitle: string;
   noReposMsg: string;
   forkBadge: string;
+  archivedBadge: string;
   repoCountLabel: (count: number) => string;
 
   // Extended Profile & Activity Metrics
@@ -236,6 +237,7 @@ export const translations: Record<Language, TranslationSchema> = {
     noReposTitle: 'Depo Bulunamadı',
     noReposMsg: 'Arama kriterlerinize uygun herhangi bir depo bulunamadı.',
     forkBadge: 'Fork',
+    archivedBadge: 'Arşivlendi',
     repoCountLabel: (count) => `${count} Depo`,
 
     commitActivityTitle: 'Yıllık Commit & Katkı Grafiği',
@@ -362,6 +364,7 @@ export const translations: Record<Language, TranslationSchema> = {
     noReposTitle: 'No Repositories Found',
     noReposMsg: 'No repositories matched your search query.',
     forkBadge: 'Fork',
+    archivedBadge: 'Archived',
     repoCountLabel: (count) => `${count} Repositories`,
 
     commitActivityTitle: 'Annual Commit & Contribution Graph',
@@ -488,6 +491,7 @@ export const translations: Record<Language, TranslationSchema> = {
     noReposTitle: 'No se encontraron repositorios',
     noReposMsg: 'Ningún repositorio coincide con tu búsqueda.',
     forkBadge: 'Bifurcación',
+    archivedBadge: 'Archivado',
     repoCountLabel: (count) => `${count} Repositorios`,
 
     commitActivityTitle: 'Gráfico Anual de Commits y Contribuciones',
@@ -614,6 +618,7 @@ export const translations: Record<Language, TranslationSchema> = {
     noReposTitle: 'Keine Repositories gefunden',
     noReposMsg: 'Keine Repositories entsprechen deiner Suchanfrage.',
     forkBadge: 'Fork',
+    archivedBadge: 'Archiviert',
     repoCountLabel: (count) => `${count} Repositories`,
 
     commitActivityTitle: 'Jährliches Commit- & Beitragsdiagramm',
@@ -740,6 +745,7 @@ export const translations: Record<Language, TranslationSchema> = {
     noReposTitle: 'Aucun dépôt trouvé',
     noReposMsg: 'Aucun dépôt ne correspond à votre recherche.',
     forkBadge: 'Fork',
+    archivedBadge: 'Archivé',
     repoCountLabel: (count) => `${count} Dépôts`,
 
     commitActivityTitle: 'Graphique Annuel des Commits et Contributions',

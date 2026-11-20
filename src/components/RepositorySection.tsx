@@ -145,6 +145,7 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
         stars: r.stargazers_count,
         forks: r.forks_count,
         is_fork: r.fork,
+        is_archived: r.archived,
         created_at: r.created_at,
         updated_at: r.updated_at
       }));
@@ -156,7 +157,7 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
       a.click();
       URL.revokeObjectURL(url);
     } else if (format === 'csv') {
-      const header = 'Name,Full Name,Description,Language,Stars,Forks,Is Fork,URL,Created At,Updated At\n';
+      const header = 'Name,Full Name,Description,Language,Stars,Forks,Is Fork,Is Archived,URL,Created At,Updated At\n';
       const rows = filteredAndSortedRepos
         .map((r) => {
           const name = sanitizeCsvCell(r.name);
@@ -166,10 +167,11 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
           const stars = r.stargazers_count || 0;
           const forks = r.forks_count || 0;
           const isFork = Boolean(r.fork);
+          const isArchived = Boolean(r.archived);
           const url = sanitizeCsvCell(r.html_url);
           const created = sanitizeCsvCell(r.created_at || '');
           const updated = sanitizeCsvCell(r.updated_at || '');
-          return `${name},${fullName},${desc},${lang},${stars},${forks},${isFork},${url},${created},${updated}`;
+          return `${name},${fullName},${desc},${lang},${stars},${forks},${isFork},${isArchived},${url},${created},${updated}`;
         })
         .join('\n');
       const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
@@ -215,6 +217,7 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
             stars: r.stargazers_count,
             forks: r.forks_count,
             is_fork: r.fork,
+            is_archived: r.archived,
             created_at: r.created_at,
             updated_at: r.updated_at
           })
@@ -498,11 +501,18 @@ export const RepositorySection: React.FC<RepositorySectionProps> = ({
                       <ExternalLink className="w-3 h-3 shrink-0 opacity-40 group-hover:opacity-100 transition-opacity" />
                     </a>
 
-                    {repo.fork && (
-                      <span className="shrink-0 text-[10px] font-mono px-1.5 py-0.2 rounded border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-500">
-                        {t.forkBadge}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {repo.archived && (
+                        <span className="text-[10px] font-mono font-medium px-1.5 py-0.2 rounded border border-amber-300 dark:border-amber-800/80 bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400">
+                          {t.archivedBadge}
+                        </span>
+                      )}
+                      {repo.fork && (
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-500">
+                          {t.forkBadge}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Description */}
