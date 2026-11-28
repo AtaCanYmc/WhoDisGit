@@ -23,7 +23,7 @@ jobs:
 
       - name: Checkout Repository
         if: ${{ steps.release.outputs.release_created }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Update Floating Major Version Tag
         if: ${{ steps.release.outputs.release_created }}
